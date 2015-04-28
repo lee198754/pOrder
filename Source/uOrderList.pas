@@ -23,6 +23,7 @@ type
     cb_Temp: TCheckBox;
     btn_hdrl: TButton;
     btn_ddth: TButton;
+    btn_ddtj: TButton;
     procedure FormShow(Sender: TObject);
     procedure lv_ddColumnClick(Sender: TObject; Column: TListColumn);
     procedure lv_ddCustomDrawItem(Sender: TCustomListView; Item: TListItem;
@@ -36,6 +37,7 @@ type
     procedure btn_ddthClick(Sender: TObject);
     procedure stg_listSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure btn_ddtjClick(Sender: TObject);
   private
     { Private declarations }
     procedure p_LvToStg(Item: TListItem);
@@ -43,8 +45,11 @@ type
     function SetaRJHD_old(iApartID: Integer;sZH, sRJHDQ, sRJHDZ: string): Boolean;
     function SetaRJHD(iApartID: Integer;sZH, sRJHDQ, sRJHDZ, sCPBH: string): Boolean;
     function CreateRJHD(sZH:string): string;  //生成兑奖号段,返回000001;001000
+    function IsDataEntryCheck:Boolean;   //录入数据检查
   public
     { Public declarations }
+    FUpdateStatusApartIDList: TStrings;   //需要更新生产状态订单列表
+    FOrderType: Integer;   //订单类型
     vActionType: integer;       {c_WorkOrder_Select,c_WorkOrder_Modify,c_WorkOrder_KD}
     vGroup: Integer;
   end;
@@ -55,7 +60,7 @@ var
 implementation
 
 uses
-  uPub_Type, uPub_Func, uPub_Text, PubStr, uFrm_WorkOrder_RJHD, uDM_DataBase, uFrm_WorkOrder_DDTH;
+  uPub_Type, uPub_Func, uPub_Text, PubStr, uFrm_WorkOrder_RJHD, uDM_DataBase, uFrm_WorkOrder_DDTH, uFrm_WorkOrder_DDTJ;
 
 {$R *.dfm}
 
@@ -63,6 +68,13 @@ procedure TFrm_OrderList.FormShow(Sender: TObject);
 var
   i, j, n: integer;
 begin
+  if FOrderType= 2 then
+  begin
+    stg_list.ColWidths[c_List_ZH] := 0;
+    stg_list.ColWidths[c_List_RJHDQ] := 0;
+    stg_list.ColWidths[c_List_RJHDZ] := 0;
+    stg_list.ColWidths[c_List_DHDLR] := 0;
+  end;  
   if vActionType = c_WorkOrder_Select then
   begin
     lv_dd.OnColumnClick := nil;
@@ -71,6 +83,7 @@ begin
     btn_ok.Enabled := False;
     edt_Temp.ReadOnly := True;
     btn_ddth.Enabled := False;
+    btn_ddtj.Enabled := False;
   end;
   SetLength(aTempRJHD,Length(aRJHD));
   for i := 0 to Length(aRJHD) -1 do
@@ -411,6 +424,7 @@ var
 begin
   if edt_Temp.Visible then
     edt_TempExit(nil);
+  if not IsDataEntryCheck then Exit;
 {  SetLength(aRJHD,Length(aTempRJHD));
   for i := 0 to Length(aTempRJHD) -1 do
   begin
@@ -595,8 +609,9 @@ begin
 //    sRJHDZ := StrToNum(sRJHDQ) + StrToNum(stg_list.Cells[c_List_BCYL,stg_list.Row]) -1;
 //    stg_list.Cells[c_List_RJHDZ,stg_list.Row] := StrRight('000000'+sRJHDZ,6);
 //  end;
-  if stg_list.Col in [c_List_RJHDQ,c_List_RJHDZ] then
+  if (stg_list.Col in [c_List_RJHDQ,c_List_RJHDZ]) and (Pos(',',stg_list.Cells[stg_list.Col,stg_list.Row])<1) then
   begin
+
     if Trim(str) <> '' then
       TEdit(Sender).Text := StrRight('000000'+str,6);
   end;
@@ -732,8 +747,11 @@ function TFrm_OrderList.SetaRJHD(iApartID: Integer; sZH, sRJHDQ,
   sRJHDZ,sCPBH: string): Boolean;
 var
   i, j, k, len: integer;
+  IndexLlst:TStrings;
+  bExec:Boolean;
 begin
   Result := False;
+  IndexLlst := TStringList.Create;
   for i := 1 to PosNum(sZH,',') + 1 do
   begin
     Len := Length(aTempRJHD);
@@ -741,20 +759,31 @@ begin
     begin
       if aTempRJHD[j].m_iApartID = iApartID then
       begin
+        if IndexLlst.IndexOf(IntToStr(j)) <> -1 then
+          Continue;
         aTempRJHD[j].m_sZH      := PosCopy(sZH,',',i);
         aTempRJHD[j].m_sRJHDQ   := PosCopy(sRJHDQ,',',i);
         aTempRJHD[j].m_sRJHDZ   := PosCopy(sRJHDZ,',',i);
+        IndexLlst.Add(IntToStr(j));
+        bExec := True;
         Break;
       end;
     end;
-    if j < len then Continue;
+    //如果已经执行过上面的循环则进行下次循环
+    if bExec then
+    begin
+      bExec := False;
+      Continue;
+    end;
     SetLength(aTempRJHD,Len+1);
     aTempRJHD[Len].m_iApartID := iApartID;
     aTempRJHD[Len].m_sZH      := PosCopy(sZH,',',i);
     aTempRJHD[Len].m_sRJHDQ   := PosCopy(sRJHDQ,',',i);
     aTempRJHD[Len].m_sRJHDZ   := PosCopy(sRJHDZ,',',i);
     aTempRJHD[Len].m_sCPBH    := PosCopy(sCPBH,',',i);
+    IndexLlst.Add(IntToStr(Len));
   end;
+  IndexLlst.Free;
   Result := True;
 end;
 
@@ -832,6 +861,55 @@ begin
     edt_Temp.CharCase := ecUpperCase
   else
     edt_Temp.CharCase := ecNormal;
+
+end;
+
+function TFrm_OrderList.IsDataEntryCheck: Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 1 to stg_list.RowCount -1 do
+  begin
+    if (stg_list.Cells[c_List_ZH,i] <> '') or
+      (stg_list.Cells[c_List_RJHDQ,i] <> '') or (stg_list.Cells[c_List_RJHDZ,i] <> '') then
+    begin
+      if (stg_list.Cells[c_List_ZH,i] = '') or
+        (stg_list.Cells[c_List_RJHDQ,i] = '') or (stg_list.Cells[c_List_RJHDZ,i] = '') then
+      begin
+        if stg_list.Cells[c_List_ZH,i] = '' then
+        begin
+          stg_list.Col := c_List_ZH;
+        end else
+        if stg_list.Cells[c_List_RJHDQ,i] = '' then
+        begin
+          stg_list.Col := c_List_RJHDQ;
+        end else
+        if stg_list.Cells[c_List_RJHDZ,i] = '' then
+        begin
+          stg_list.Col := c_List_RJHDZ;
+        end;
+        stg_list.Row := i;
+        p_MessageBoxDlg('请输入完整兑奖号码!');
+        stg_list.SetFocus;
+        Exit;
+      end;
+    end;
+  end;
+  Result := True;
+end;
+
+procedure TFrm_OrderList.btn_ddtjClick(Sender: TObject);
+begin
+  Frm_WorkOrder_DDTJ := TFrm_WorkOrder_DDTJ.Create(Self);
+  if Frm_WorkOrder_DDTJ.ShowModal = mrok then
+  begin
+    if not Assigned(FUpdateStatusApartIDList) then
+      FUpdateStatusApartIDList := TStringList.Create;
+    FUpdateStatusApartIDList.Add(IntToStr(OrderData[Frm_WorkOrder_DDTJ.FOrderIndex].m_iApartID));
+    FormShow(nil);
+  end;
+  Frm_WorkOrder_DDTJ.Free;
 
 end;
 

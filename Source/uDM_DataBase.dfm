@@ -1,8 +1,8 @@
 object DM_DataBase: TDM_DataBase
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Left = 637
-  Top = 158
+  Left = 473
+  Top = 104
   Height = 433
   Width = 653
   object ADO_DataRec: TADOQuery
@@ -18,10 +18,10 @@ object DM_DataBase: TDM_DataBase
   object Con_YDPrint: TADOConnection
     ConnectionString = 
       'Provider=SQLOLEDB.1;Integrated Security=SSPI;Persist Security In' +
-      'fo=False;Initial Catalog=YDPrint;Data Source=.;Use Procedure for' +
-      ' Prepare=1;Auto Translate=True;Packet Size=4096;Workstation ID=L' +
-      'EE-PC;Use Encryption for Data=False;Tag with column collation wh' +
-      'en possible=False;'
+      'fo=False;Initial Catalog=YDPrint;Data Source=.\sql05;Use Procedu' +
+      're for Prepare=1;Auto Translate=True;Packet Size=4096;Workstatio' +
+      'n ID=LEE-PC;Use Encryption for Data=False;Tag with column collat' +
+      'ion when possible=False;'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
     Left = 488

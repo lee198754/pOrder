@@ -51,6 +51,9 @@ object Fra_kd: TFra_kd
       Top = 22
       Width = 145
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 70
       EditLabel.Height = 14
       EditLabel.Caption = #35746#21333#31867#22411#65306
@@ -123,6 +126,9 @@ object Fra_kd: TFra_kd
       Top = 46
       Width = 145
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 70
       EditLabel.Height = 14
       EditLabel.Caption = #20135#21697#31867#21035#65306
@@ -143,6 +149,9 @@ object Fra_kd: TFra_kd
       Top = 46
       Width = 145
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 70
       EditLabel.Height = 14
       EditLabel.Caption = #20135#21697#31867#22411#65306
@@ -161,6 +170,9 @@ object Fra_kd: TFra_kd
       Top = 69
       Width = 73
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 70
       EditLabel.Height = 14
       EditLabel.Caption = #24180#20221#26631#35782#65306
@@ -183,6 +195,9 @@ object Fra_kd: TFra_kd
       Top = 71
       Width = 97
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 84
       EditLabel.Height = 14
       EditLabel.Caption = #26159#21542#23567#25209#37327#65306
@@ -205,6 +220,9 @@ object Fra_kd: TFra_kd
       Top = 23
       Width = 152
       Height = 22
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 70
       EditLabel.Height = 14
       EditLabel.Caption = #31614#26679#29366#24577#65306

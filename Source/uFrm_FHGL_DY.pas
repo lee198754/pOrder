@@ -734,8 +734,8 @@ begin
       if Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_CPBH,n] <> '' then
       begin
         FHDDXX[i].m_sSL := Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_SL,n];
-        FHDDXX[i].m_sNJPM := FHDDXX[i].m_sCPLX + ' ' +Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_NJPM,n];
         FHDDXX[i].m_sCPLX := Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_CPLX,n];
+        FHDDXX[i].m_sNJPM := FHDDXX[i].m_sCPLX + ' ' +Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_NJPM,n];
         FHDDXX[i].m_sCPDW := Frm_FHGL_JZFS.stg_njxx.Cells[c_NJXX_CPDW,n];
         FHDDXX[i].m_sSJRY := vsSJRY;
         if FHDDXX[i].m_sSL <> '' then

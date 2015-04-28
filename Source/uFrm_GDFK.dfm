@@ -98,6 +98,9 @@ object Frm_GDFK: TFrm_GDFK
       Top = 27
       Width = 120
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 30
       EditLabel.Height = 12
       EditLabel.Caption = #29366#24577':'

@@ -1,32 +1,34 @@
 object Fra_WarehEntryBarCode: TFra_WarehEntryBarCode
-  Left = 0
-  Top = 0
+  Left = 299
+  Top = 147
   Width = 800
   Height = 600
+  Color = clBtnFace
   Font.Charset = GB2312_CHARSET
   Font.Color = clWindowText
   Font.Height = -14
   Font.Name = #23435#20307
   Font.Style = []
-  ParentFont = False
-  TabOrder = 0
+  OldCreateOrder = True
+  PixelsPerInch = 96
+  TextHeight = 14
   object RzGroupBox2: TRzGroupBox
     Left = 0
     Top = 0
-    Width = 800
-    Height = 561
+    Width = 784
+    Height = 523
     Align = alClient
     TabOrder = 0
     object RzPanel1: TRzPanel
       Left = 1
       Top = 15
-      Width = 798
+      Width = 782
       Height = 34
       Align = alTop
       BorderOuter = fsNone
       TabOrder = 0
       DesignSize = (
-        798
+        782
         34)
       object RzBitBtn1: TRzBitBtn
         Left = 12
@@ -41,16 +43,16 @@ object Fra_WarehEntryBarCode: TFra_WarehEntryBarCode
     object rb_fydh: TRzGroupBox
       Left = 1
       Top = 49
-      Width = 798
-      Height = 511
+      Width = 782
+      Height = 473
       Align = alClient
       Caption = #36827#20179#26465#24418#30721
       TabOrder = 1
       object stg_jctxm: Ti_StgEdit
         Left = 1
         Top = 15
-        Width = 796
-        Height = 495
+        Width = 780
+        Height = 457
         Align = alClient
         ColCount = 10
         DefaultRowHeight = 20
@@ -121,14 +123,14 @@ object Fra_WarehEntryBarCode: TFra_WarehEntryBarCode
   end
   object RzPanel2: TRzPanel
     Left = 0
-    Top = 561
-    Width = 800
+    Top = 523
+    Width = 784
     Height = 39
     Align = alBottom
     BorderOuter = fsNone
     TabOrder = 1
     DesignSize = (
-      800
+      784
       39)
     object btn_Save: TRzBitBtn
       Left = 20

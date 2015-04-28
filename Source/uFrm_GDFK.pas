@@ -300,9 +300,9 @@ begin
           end;
       end;
       if (cbb_llzt.ItemIndex = c_llzt_dy) then     //´òÑù
-        iRec := obj.setDYQR('wsfj1', '000000',iif(iDfbbz=0,iOrderType,3),sDetailsID,0,StrLeft(sSpbm,17))
+        iRec := obj.setDYQR(g_Web_UserName, g_Web_UserPwd,iif(iDfbbz=0,iOrderType,3),sDetailsID,0,StrLeft(sSpbm,17))
       else
-        iRec := obj.setProductInfo('wsfj1', '000000',iif(iDfbbz=0,iOrderType,3),sDetailsID,sSpbm,cbb_llzt.ItemIndex-1);
+        iRec := obj.setProductInfo(g_Web_UserName, g_Web_UserPwd,iif(iDfbbz=0,iOrderType,3),sDetailsID,sSpbm,cbb_llzt.ItemIndex-1);
 //      iRec := 0;
       if iRec = 0 then
       begin
@@ -403,3 +403,5 @@ begin
 end;
 
 end.
+
+

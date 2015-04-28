@@ -23,7 +23,6 @@ type
     stg_cpybb: Ti_StgEdit;
     rmr_CPYBB: TRMGridReport;
     rmdb_CPYBB: TRMDBDataSet;
-    ADO_CPYBB: TADOQuery;
     cbb_bb: Ti_ComboBox;
     cbb_xpl: Ti_ComboBox;
     procedure btn_cxClick(Sender: TObject);
@@ -32,6 +31,7 @@ type
     procedure stg_cpybbLinkClick(Sender: TObject; ACol, ARow: Integer);
   private
     { Private declarations }
+    ADO_CPYBB: TADOQuery;
     procedure ReadCPYBB(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -60,7 +60,6 @@ const
 
 procedure TFra_CPYBB.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb,iXPL,iOrderType: integer;
 begin
@@ -84,9 +83,12 @@ begin
     iOrderType := -1;
   end;
   try
-    ADO_CPYBB.Close;
-    ADO_CPYBB.SQL.Text := Format('Exec p_cpybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
-    ADO_CPYBB.Open;
+    if Assigned(ADO_CPYBB) then ADO_CPYBB.Free;
+    ADO_CPYBB := DM_DataBase.OpenQuery('Exec p_cpybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
+    rmdb_CPYBB.DataSet := ADO_CPYBB;
+//    ADO_CPYBB.Close;
+//    ADO_CPYBB.SQL.Text := Format('Exec p_cpybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
+//    ADO_CPYBB.Open;
     ReadCPYBB(ADO_CPYBB);
   except
     on E: Exception do

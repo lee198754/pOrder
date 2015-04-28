@@ -21,6 +21,7 @@ type
     procedure btn_okClick(Sender: TObject);
     procedure btn_hdrlClick(Sender: TObject);
     procedure edt_TempExit(Sender: TObject);
+    procedure edt_TempKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
     procedure SetValueLabelGroup(n,iRow: integer);
@@ -53,6 +54,10 @@ begin
 //  stg_LableGroup.ColBuddy[ACol] := 'edt_Temp';
   if stg_LableGroup.RowCount = ARow+1 then
     stg_LableGroup.RowCount := stg_LableGroup.RowCount +1;
+//  if ACol in [c_Group_ZH] then
+//    edt_Temp.CharCase := ecUpperCase
+//  else
+//    edt_Temp.CharCase := ecNormal;
 end;
 
 procedure TFrm_LableGroup.btn_okClick(Sender: TObject);
@@ -171,6 +176,13 @@ begin
     sRJHDZ := StrToNum(str) + StrToNum(stg_LableGroup.Cells[c_Group_BCYL,stg_LableGroup.Row]) -1;
     stg_LableGroup.Cells[c_Group_RJHDZ,stg_LableGroup.Row] := StrRight('000000'+sRJHDZ,6);
   end;      }
+end;
+
+procedure TFrm_LableGroup.edt_TempKeyPress(Sender: TObject; var Key: Char);
+begin
+  if stg_LableGroup.Col in [c_Group_ZH] then
+    Key := UpCase(Key);
+
 end;
 
 end.

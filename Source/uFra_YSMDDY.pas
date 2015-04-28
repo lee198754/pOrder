@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, ButtonEdit, RM_System, RM_Common, RM_Class;
+  Dialogs, StdCtrls, ButtonEdit, RM_System, RM_Common, RM_Class, ADODB;
 
 type
   TFra_YSMDDY = class(TFrame)
@@ -30,6 +30,8 @@ type
     rmr_hmjz: TRMReport;
     rmr_qmjz_old: TRMReport;
     rmr_hmjz_old: TRMReport;
+    rmr_qmjzSounce: TRMReport;
+    rmr_hmjzSounce: TRMReport;
     procedure btn_qjysmddyClick(Sender: TObject);
     procedure btn_sjysmdClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -47,7 +49,7 @@ type
 implementation
 
 uses
-  uPub_Type, uPub_Text, uPub_Func, PubStr;
+  uPub_Type, uPub_Text, uPub_Func, PubStr, uDM_DataBase;
 
 {$R *.dfm}
 
@@ -75,6 +77,7 @@ begin
         if FileExists(sFileName) then
           rmr_qmjz.LoadFromFile(sFileName);
         Report := rmr_qmjz;
+
         //rmr_qmjz.PrepareReport;
         //rmr_qmjz.ShowReport;
       end;
@@ -187,6 +190,8 @@ var
   aRecField : TArrSelectField;
   i: Integer;
   sSHRDH,sSHRSJ: string;
+  ADO_Rec: TADOQuery;
+  sSqlData: string;
 begin
   aRecField := f_ShowSelectSHXX(edt_njpm.Text);
   sSHRDH := '';
@@ -211,6 +216,8 @@ begin
   else
     sSHRSJ := sSHRSJ + sSHRDH;
   edt_sjdh.Text := sSHRSJ;
+//  sSqlData := 'Select Top 1 F_sCPLX from Set_PostageType e where F_iID=dbo.f_GetPostageID(d.F_sCPBH,d.F_sYZTMC) and EXISTS(SELECT 1 FROM dbo.Set_ProductCategory WHERE F_iID=e.F_iProductCategoryID AND F_iClassCode=b.F_iProductType) order by F_sNF desc,F_iID desc'
+//  ADO_Rec := DM_DataBase.OpenQuery(sSqlData)
 end;
 
 procedure TFra_YSMDDY.Button4Click(Sender: TObject);
@@ -234,14 +241,14 @@ begin
     case iJZ of
       0:
         begin
-          sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_QMJZ_ExeName;//c_WorkOrder_PrintExeName;
+          sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_DD_QMJZ_ExeName;//c_WorkOrder_PrintExeName;
           if not FileExists(sFileName) then
             ForceDirectories(ExtractFilePath(sFileName));
           CopyFile(PChar(OpenDialog1.FileName),PChar(sFileName),False);
         end;
       1:
         begin
-          sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_HMJZ_ExeName;
+          sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_DD_HMJZ_ExeName;
           if not FileExists(sFileName) then
             ForceDirectories(ExtractFilePath(sFileName));
           CopyFile(PChar(OpenDialog1.FileName),PChar(sFileName),False);
@@ -270,7 +277,7 @@ begin
   case iJZ of
     0:
       begin
-        sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_QMJZ_ExeName;//c_WorkOrder_PrintExeName;
+        sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_DD_QMJZ_ExeName;//c_WorkOrder_PrintExeName;
         if FileExists(sFileName) then
           DeleteFile(sFileName);
         if FileExists(vsTempPath+c_Temp_QMJZ_ExeName) then
@@ -278,7 +285,7 @@ begin
       end;
     1:
       begin
-        sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_HMJZ_ExeName;
+        sFileName := ExtractFilePath(Application.ExeName)+c_YSMD_DD_HMJZ_ExeName;
         if FileExists(sFileName) then
           DeleteFile(sFileName);
         if FileExists(vsTempPath+c_Temp_HMJZ_ExeName) then

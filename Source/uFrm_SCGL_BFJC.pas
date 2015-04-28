@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Grids, iGrid, ExtCtrls;
+  Dialogs, StdCtrls, Grids, iGrid, ExtCtrls, RM_Dataset, RM_System,
+  RM_Common, RM_Class, RM_GridReport, ADODB;
 
 type
   TFrm_SCGL_BFJC = class(TForm)
@@ -13,11 +14,17 @@ type
     btn_close: TButton;
     stg_BFJC: Ti_StgEdit;
     edt_Temp: TEdit;
+    btn_Print: TButton;
+    rmr_JC: TRMGridReport;
+    rmdb_SCGL_JC: TRMDBDataSet;
     procedure FormShow(Sender: TObject);
     procedure btn_okClick(Sender: TObject);
+    procedure btn_PrintClick(Sender: TObject);
   private
     { Private declarations }
+    FIsPrint: Boolean;
     function IsCheck:Boolean;
+    function GetIsJCPrint: Boolean;
   public
     { Public declarations }
     vSuccess: Boolean;
@@ -31,7 +38,7 @@ var
 implementation
 
 uses
-  uPub_Text,PubStr, uDM_DataBase, uPub_Type;
+  uPub_Text,PubStr, uDM_DataBase, uPub_Type, uPub_Func;
 
 {$R *.dfm}
 
@@ -40,8 +47,12 @@ uses
 procedure TFrm_SCGL_BFJC.FormShow(Sender: TObject);
 begin
   vSuccess := False;
+  FIsPrint := GetIsJCPrint;
   stg_BFJC.ColBuddy[c_BFJC_BCJCYL] := 'edt_Temp';
   stg_BFJC.ColWidths[c_BFJC_DetailsID] := 0;
+  stg_BFJC.ColWidths[c_BFJC_GDH] := 0;
+  stg_BFJC.ColWidths[c_BFJC_KHMC] := 0;
+
 end;
 
 procedure TFrm_SCGL_BFJC.btn_okClick(Sender: TObject);
@@ -54,6 +65,11 @@ var
   sDetailsID,sScrqFieldName,sCzrFieldName: string;
 begin
   vSuccess := False;
+  if not FIsPrint then
+  begin
+    p_MessageBoxDlg('请先打印进仓单再进行确认!');
+    Exit;
+  end;
   if not IsCheck then Exit;
   sInsertSQL := '';
   sDetailsID := '';
@@ -96,14 +112,23 @@ begin
         ,iSczt,LoginData.m_iUserID,vWorkID,iSczt],True);
     end;
 
+    if sDetailsID <> '' then
+    begin
+      sSqlData := 'create table #ApartID (F_iApartID int ,F_iDetailsID int,F_iSL int) ';
+      sSqlData := sSqlData + ' insert into #ApartID (F_iDetailsID,F_iSL) ' + sInsertSQL;
+      DM_DataBase.ExecQuery(sSqlData,[],True);
+      sSqlData := ' p_jcgl ''%s''';
+      DM_DataBase.ExecQuery(sSqlData,[sDetailsID],True);
+      
+      //更新进仓打印标记并增加进仓数量
+//      sSqlData := 'update DO_WorkOrderDetails set F_tiJCDY=1,F_iJCSL=F_iJCSL+b.F_iSL '
+//        +' from DO_WorkOrderDetails a,#ApartID b '
+//        +' where a.F_iID in (%s) and a.F_iID=b.F_iDetailsID ';
+//      DM_DataBase.ExecQuery(sSqlData,[sDetailsID],True);
 
-    sSqlData := 'create table #ApartID (F_iApartID int ,F_iDetailsID int,F_iSL int) ';
-    sSqlData := sSqlData + ' insert into #ApartID (F_iDetailsID,F_iSL) ' + sInsertSQL;
-    DM_DataBase.ExecQuery(sSqlData,[],True);
-    sSqlData := ' p_jcgl ''%s''';
-    DM_DataBase.ExecQuery(sSqlData,[sDetailsID],True);
-    sSqlData := 'drop table #ApartID';
-    DM_DataBase.ExecQuery(sSqlData,[],True);
+      sSqlData := 'drop table #ApartID';
+      DM_DataBase.ExecQuery(sSqlData,[],True);
+    end;
 
     if sDetailsID <> ''  then
     begin
@@ -123,6 +148,7 @@ begin
         ,iSczt,LoginData.m_iUserID,iSczt,vJTXXID
         ,sScrqFieldName,sCzrFieldName,LoginData.m_iUserID,vJTXXID,iSczt
         ,iSczt,LoginData.m_iUserID,vWorkID,iSczt],True);
+
     end;
     DM_DataBase.Con_YDPrint.CommitTrans;
   except
@@ -142,6 +168,80 @@ begin
   Result := False;
 
   Result := True;
+end;
+
+procedure TFrm_SCGL_BFJC.btn_PrintClick(Sender: TObject);
+var
+  i, iBCJCYL, iDetailsID, iSCZT: Integer;
+  sInsertSQL,sSqlData: string;
+  sDetailsID,sKHMC,sScrqFieldName,sCzrFieldName: string;
+  ADO_Rec: TADOQuery;
+begin
+  if not IsCheck then Exit;
+  sDetailsID := '';
+  for i := 1 to stg_BFJC.RowCount -1 do
+  begin
+    iBCJCYL := StrToNum(stg_BFJC.Cells[c_BFJC_BCJCYL,i]);
+    iDetailsID := StrToNum(stg_BFJC.Cells[c_BFJC_DetailsID,i]);
+    sKHMC := stg_BFJC.Cells[c_BFJC_KHMC,i];
+    if sInsertSQL = '' then
+      sInsertSQL := Format(' Select %d,%d,''%s'' ',[iDetailsID,iBCJCYL,sKHMC])
+    else
+      sInsertSQL := sInsertSQL + Format(' union all Select %d,%d,''%s'' ',[iDetailsID,iBCJCYL,sKHMC]);
+    if (iBCJCYL >0)and (iBCJCYL <= StrToNum(stg_BFJC.Cells[c_BFJC_WJCYL,i])) then
+      sDetailsID := IntToStr(iDetailsID) +',' + sDetailsID;
+  end;
+  if sDetailsID <> '' then
+  begin
+    sDetailsID := Copy(sDetailsID,1,Length(sDetailsID)-1);
+    sSqlData := 'create table #ApartID (F_iApartID int ,F_iDetailsID int,F_iSL int,F_sKHMC varchar(50)) ';
+    sSqlData := sSqlData + ' insert into #ApartID (F_iDetailsID,F_iSL,F_sKHMC) ' + sInsertSQL;
+    DM_DataBase.ExecQuery(sSqlData,[],True);
+    sSqlData := 'SELECT a.F_sGDH GDH,left(b.F_sCPBH,17) CPBH, b.F_sKhmc KHMC, DW=''枚'', sum(b.F_sSL*10000) SL,sum(c.F_iSL) JCSL'
+      +' FROM dbo.DO_WorkOrder a, dbo.DO_WorkOrderDetails b,#ApartID c WHERE a.F_iID=b.F_iWorkID AND b.F_iID =c.F_iDetailsID'
+      +' Group by a.F_sGDH,b.F_sKhmc,left(b.F_sCPBH,17)';
+    ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[sDetailsID]);
+    if Assigned(ADO_Rec) and (ADO_Rec.RecordCount > 0) then
+    begin
+      rmdb_SCGL_JC.DataSet := ADO_Rec;
+      rmr_JC.PrepareReport;
+      rmr_JC.ShowReport;
+    end;
+    if Assigned(ADO_Rec) then ADO_Rec.Free;
+
+    sSqlData := 'drop table #ApartID';
+    DM_DataBase.ExecQuery(sSqlData,[],True);
+  end;
+  FIsPrint := True;
+end;
+
+function TFrm_SCGL_BFJC.GetIsJCPrint: Boolean;
+var
+  i, iBCJCYL,iDetailsID: Integer;
+  sDetailsID, sSqlData: string;
+  ADO_Rec: TADOQuery;
+begin
+  Result := False;
+ { for i := 1 to stg_BFJC.RowCount -1 do
+  begin
+    iBCJCYL := StrToNum(stg_BFJC.Cells[c_BFJC_BCJCYL,i]);
+    iDetailsID := StrToNum(stg_BFJC.Cells[c_BFJC_DetailsID,i]);
+    if iBCJCYL = StrToNum(stg_BFJC.Cells[c_BFJC_WJCYL,i]) then
+      sDetailsID := IntToStr(iDetailsID) +',' + sDetailsID;
+  end;
+  if sDetailsID <> '' then
+  begin
+    sDetailsID := Copy(sDetailsID,1,Length(sDetailsID)-1);
+    sSqlData := 'SELECT 1 from DO_WorkOrderDetails where F_iID in (%s) and F_tiJCDY=0';
+    ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[sDetailsID]);
+    if Assigned(ADO_Rec) then
+    begin
+      if (ADO_Rec.RecordCount=0) then
+        Result := True;
+      ADO_Rec.Free;
+    end;
+  end;   }
+
 end;
 
 end.

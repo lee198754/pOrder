@@ -11,9 +11,6 @@ uses
 
 
 
-const
-  DatabaseUserName = 'yd';
-  DatabaseUserPwd = '000000';
 
 type
   //TADOQueryM = TADOQuery;
@@ -80,13 +77,12 @@ var
 implementation
 
 uses
-  IniFiles,uPub_Func;
+  IniFiles,uPub_Func,uPub_Text;
 
 {$R *.dfm}
 
 var
   ReconnectionThread: TReconnectionThread;
-  vbReconnection: Boolean=False;   //重新连接数据库
 
 procedure TDM_DataBase.DataModuleCreate(Sender: TObject);
 var
@@ -119,7 +115,7 @@ begin
       InstanceName := '\'+InstanceName;
     if ServicesIP <> '' then
       str := Format('Provider=SQLOLEDB.1;Password=%s;Persist Security Info=True;User ID=%s;Initial Catalog=%s;Data Source=',
-        [DatabaseUserPwd,DatabaseUserName,'YDPrint'])
+        [g_DatabaseUserPwd,g_DatabaseUserName,'YDPrint'])
     else
       str := Format('Provider=SQLOLEDB.1;Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=%s;Data Source=.',
         ['YDPrint']);
@@ -134,7 +130,7 @@ begin
   begin
     if ServicesIP <> '' then
       str := Format('Provider=SQLOLEDB.1;Password=%s;Persist Security Info=True;User ID=%s;Initial Catalog=%s;Data Source=',
-        [DatabaseUserPwd,DatabaseUserName,'YDPrint_History'])
+        [g_DatabaseUserPwd,g_DatabaseUserName,'YDPrint_History'])
     else
       str := Format('Provider=SQLOLEDB.1;Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=%s;Data Source=.',
         ['YDPrint_History']);
@@ -182,7 +178,6 @@ begin
 //      Result := nil;
 //      if Pos('连接失败',E.message)>0 then
 //      begin
-//        vbReconnection := True;
 //      end;
 //      if not bRaise then
 //        Application.MessageBox(PChar('错误:'+E.message),'提示',MB_ICONINFORMATION)
@@ -222,7 +217,6 @@ begin
 //      begin
 //        if Pos('连接失败',E.message)>0 then
 //        begin
-//          vbReconnection := True;
 //        end;
 //        if not bRaise then
 //          Application.MessageBox(PChar('错误:'+E.message),'提示',MB_ICONINFORMATION)
@@ -245,6 +239,8 @@ begin
   try
     Result := TADOQuery.Create(Self);
     //Result.Close
+    if not ADOCon.Connected then
+      ADOCon.Connected := True;
     Result.Connection := ADOCon;
     if Length(Args) > 0 then
       Result.SQL.Text := Format(SQLText,Args)
@@ -256,10 +252,10 @@ begin
     begin
       Result.Free;
       Result := nil;
-      f_WriteOperationLog('数据库访问出错:'+E.message+' SQL语句:'+Format(SQLText,Args),999);
+      f_WriteUserOperationLog('数据库访问出错:'+E.message+' SQL语句:'+Format(SQLText,Args),999);
       if Pos('连接失败',E.message)>0 then
       begin
-        vbReconnection := True;
+        ADOCon.Connected := False;
       end;
       if not bRaise then
         Application.MessageBox(PChar('错误:'+E.message),'提示',MB_ICONINFORMATION)
@@ -279,6 +275,8 @@ begin
   ADO_Rec := TADOQuery.Create(Self);
   try
     try
+      //if not ADOCon.Connected then
+      ADOCon.Connected := True;
       ADO_Rec.Connection := ADOCon;
       if Length(Args) > 0 then
         ADO_Rec.SQL.Text := Format(SQLText,Args)
@@ -291,7 +289,7 @@ begin
       begin
         if Pos('连接失败',E.message)>0 then
         begin
-          vbReconnection := True;
+          ADOCon.Connected := False;
         end;
         if not bRaise then
           Application.MessageBox(PChar('错误:'+E.message),'提示',MB_ICONINFORMATION)
@@ -339,7 +337,6 @@ begin
   try
     try
       ADO_Rec := OpenQuery(Sql,[],True);
-      ADO_Rec.Open;
       if ADO_Rec.RecordCount > 0 then
         Result := ADO_Rec.Fields[0].AsInteger;
     except
@@ -358,12 +355,15 @@ function TDM_DataBase.GetTableData(out ADO_Rec: TADOQuery; TableName,
   Data: string): Boolean;
 begin
   Result:= False;
+  if Assigned(ADO_Rec) then
+    ADO_Rec.Free;
   //ADO_Rec.Free;
   //ADO_Rec := OpenQuery('select * from %s where  %s',[TableName,Data],True);
-  ADO_Rec.Connection := Con_YDPrint;
-  ADO_Rec.Close;
-  ADO_Rec.SQL.Text := 'select * from ' + TableName + ' where  '+ Data;
-  ADO_Rec.Open;
+//  ADO_Rec.Connection := Con_YDPrint;
+//  ADO_Rec.Close;
+//  ADO_Rec.SQL.Text := 'select * from ' + TableName + ' where  '+ Data;
+//  ADO_Rec.Open;
+  ADO_Rec := OpenQuery('select * from %s where %s ',[TableName,Data],True);
   Result:= True;
 end;
 
@@ -438,7 +438,7 @@ begin
   inherited;
   while 1=1 do
   begin
-    if vbReconnection then
+   { if vbReconnection then
     begin
       try
         DM_DataBase.Con_YDPrint.Connected := False;
@@ -448,10 +448,12 @@ begin
       finally
 
       end;
-    end;
+    end;           }
     Sleep(5000);
   end;
 
 end;
 
 end.
+
+

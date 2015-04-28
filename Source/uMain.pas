@@ -210,7 +210,6 @@ uses
   //function GetFra_XQCX:Fra_XQCX; External; 'D:\Borland\Delphi7\Bin\bin\Project2.dll' ;
 
 var
-  vbExecute: Boolean;
   LoadBulletinThread: TLoadBulletinThread;
 
 procedure TFrm_Main.WriteLoginLog(sType: string);
@@ -255,7 +254,6 @@ var
 begin
   Application.OnException := AppException;
   f_MakeAllow;
-  vbExecute := True;
   LoadBulletinThread := TLoadBulletinThread.Create(True);
   with LoadBulletinThread do
   begin
@@ -901,12 +899,11 @@ procedure TFrm_Main.InitFra(Sender: TObject);
       Result := (Sender as TAction).Caption;
   end;
 var
-  str: string;
   sCaption: string;
 begin
   if not Assigned(Sender) then Exit;
   sCaption := GetCaption(Sender);
-  f_WriteOperationLog('进入'+sCaption);
+  f_WriteUserOperationLog('进入'+sCaption);
   GetPostageTypeList;                 //获取邮资图,产品类别,//获取产品类别
   //GetProductCategoryList;             //获取产品类别
   //GetProductTypeList;                 //获取产品类型
@@ -1023,10 +1020,7 @@ begin
     if not Assigned(Fra_WarehEntryBarCode1) then
     begin
       Fra_WarehEntryBarCode1 := TFra_WarehEntryBarCode.Create(Self);
-      Fra_WarehEntryBarCode1.Hide;
-      Fra_WarehEntryBarCode1.Parent := Self;
     end;
-    Fra_WarehEntryBarCode1.Align := alClient;
     Fra_WarehEntryBarCode1.FraShow;
     Fra_WarehEntryBarCode1.Visible := True;
     Application.ProcessMessages;
@@ -1264,10 +1258,9 @@ begin
       aFrm_WorkOrder[i].Free;
   end;  }
 
-  if LoadBulletinThread <> nil then
+  if Assigned(LoadBulletinThread) then
   begin
-    vbExecute := False;
-    LoadBulletinThread.Free;
+    LoadBulletinThread.Terminate;
     LoadBulletinThread := nil;
   end;
 
@@ -1499,8 +1492,9 @@ var
 begin
   inherited;
   g_MaxID := 0;
+  FreeOnTerminate := True;
   i := viLoadBulletinTime;
-  while vbExecute do
+  while not Terminated do
   begin
 //    if vbThreadStopping then
 //    begin
@@ -1535,8 +1529,9 @@ begin
   sSqlData := ' Select a.F_dFBRQ,b.F_sRealName,a.F_sContent,a.F_iID from BI_BulletinBoard a left join BI_UserList b on a.F_sFBRBM=b.F_sName '
     + ' where DATEDIFF(dd,a.F_dFBRQ,getdate()) <=30 and a.F_tiCXBZ=0 order by a.F_dFBRQ desc ';
   ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[],False,Con_Bulletin);
-  if Assigned(ADO_Rec) then
+  if Assigned(ADO_Rec) and Assigned(Frm_Main) then
   begin
+
     with Frm_Main.lv_bulletin do
     begin
       while Items.Count <> ADO_Rec.RecordCount do
@@ -1713,9 +1708,9 @@ end;
 
 procedure TFrm_Main.AppException(Sender: TObject; E: Exception);
 begin
+  f_WriteUserOperationLog('system: ' + E.Message,999);
   if Pos('Code',E.Message) =0 then
     p_MessageBoxDlg('system: ' + E.Message);
-  f_WriteOperationLog('system: ' + E.Message,999);
 end;
 
 procedure TFrm_Main.rg_scglItems8Click(Sender: TObject);

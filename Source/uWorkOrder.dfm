@@ -1,6 +1,6 @@
 object Frm_WorkOrder: TFrm_WorkOrder
-  Left = 260
-  Top = 74
+  Left = 160
+  Top = 69
   Width = 900
   Height = 600
   Caption = #24320#24037#21333
@@ -2257,7 +2257,6 @@ object Frm_WorkOrder: TFrm_WorkOrder
     Top = 369
   end
   object ADO_Details: TADOQuery
-    Active = True
     Connection = DM_DataBase.Con_YDPrint
     CursorType = ctStatic
     LockType = ltBatchOptimistic
@@ -2268,7 +2267,6 @@ object Frm_WorkOrder: TFrm_WorkOrder
     Top = 401
   end
   object ADO_MkProcDet: TADOQuery
-    Active = True
     Connection = DM_DataBase.Con_YDPrint
     CursorType = ctStatic
     Parameters = <>
@@ -2291,7 +2289,6 @@ object Frm_WorkOrder: TFrm_WorkOrder
     Top = 369
   end
   object ADO_Matl: TADOQuery
-    Active = True
     Connection = DM_DataBase.Con_YDPrint
     CursorType = ctStatic
     Parameters = <>
@@ -2317,7 +2314,6 @@ object Frm_WorkOrder: TFrm_WorkOrder
     Top = 369
   end
   object ADO_ZB: TADOQuery
-    Active = True
     Connection = DM_DataBase.Con_YDPrint
     CursorType = ctStatic
     Parameters = <>

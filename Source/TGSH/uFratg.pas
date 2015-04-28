@@ -89,6 +89,8 @@ type
     vYs: integer;       //当前页数
     vSqlData: string;
     vOrderType: integer;
+    vJSZTSH: Boolean;
+    vHGZTSH: Boolean;
     procedure ReadDataJHXD(ADO_Data: TADOQuery;Bz: integer);
     function f_MakeAllow: Boolean;   //操作允许
   public
@@ -251,6 +253,8 @@ var
   sSqlData, sZT, sCPBH: string;
   sCzrqFieldName,sCzrFieldName: string;
   bCheck: Boolean;
+  ssOrderID: TStrings;
+
 begin
   bCheck := False;
   for i := 0 to lv_jhxd.Items.Count -1 do
@@ -259,9 +263,9 @@ begin
     begin
       bCheck := True;
       iOrderType := StrToNum(lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-2]);
+      sZT := lv_jhxd.Items[i].SubItems.Strings[c_zt];
       if cbb_llzt.ItemIndex = c_llzt_dy  then
       begin
-        sZT := lv_jhxd.Items[i].SubItems.Strings[c_zt];
         if sZT <> '图稿已合格' then
         begin
           sCPBH := lv_jhxd.Items[i].SubItems.Strings[c_cpbh];
@@ -269,8 +273,17 @@ begin
           Exit;
         end;
       end else
+      if cbb_llzt.ItemIndex in [c_llzt_whg,c_llzt_yhg]  then
       begin
-        Break;
+        if sZT <> '图稿已收到' then
+        begin
+          sCPBH := lv_jhxd.Items[i].SubItems.Strings[c_cpbh];
+          p_MessageBoxDlg(sCPBH+' 只有是"图稿已收到"状态才可以操作"合格"和"未合格"!');
+          Exit;
+        end;
+      end else
+      begin
+        Break
       end;
     end;
   end;
@@ -288,10 +301,30 @@ begin
   begin
     Exit;
   end;
+
+  if not vJSZTSH then
+  begin
+    if cbb_llzt.ItemIndex in [c_llzt_wsd,c_llzt_ysd] then
+    begin
+      p_MessageBoxDlg('无此权限!');
+      Exit;
+    end;
+  end;
+  if not vHGZTSH then
+  begin
+    if cbb_llzt.ItemIndex in [c_llzt_whg,c_llzt_yhg] then
+    begin
+      p_MessageBoxDlg('无此权限!');
+      Exit;
+    end;
+  end;
+
   for i := 0 to lv_jhxd.Items.Count -1 do
   begin
     if lv_jhxd.Items[i].Checked then
     begin
+      if not Assigned(ssOrderID) then  ssOrderID := TStringList.Create;
+      ssOrderID.Add(lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-1]);
       sID := lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-1]+',' + sID;
       sSqlData := sSqlData +' if not exists(Select 1 from DO_OrderPicDate_Log where F_iOrderID = '+lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-1]+' ' ;
       sSqlData := sSqlData +' and F_tiOrderType = '+lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-2]+') ' ;
@@ -370,6 +403,8 @@ begin
         SQL.Text := SQL.Text+Format(' Update BI_CustomOrderDetails set F_dLGRQ=getdate(), F_sLGCZRBM=''%s'' where IsNull(F_sLGCZRBM,'''') = '''' and F_iID in (%s) '
           ,[LoginData.m_sUserName,sID]);
         ExecSQL;
+        for i := 0 to ssOrderID.Count - 1 do
+          f_WriteOrderPicReviewLog(StrToInt(ssOrderID.Strings[i]),iOrderType,iTgzt,0);
       end else
       if iOrderType = c_xsx then
       begin
@@ -388,9 +423,11 @@ begin
         SQL.Text := SQL.Text+Format(' Update BI_SellOrderDetails set F_dLGRQ=getdate(), F_sLGCZRBM=''%s'' where IsNull(F_sLGCZRBM,'''') = '''' and F_iID in (%s) '
           ,[LoginData.m_sUserName,sID]);
         ExecSQL;
+        for i := 0 to ssOrderID.Count - 1 do
+          f_WriteOrderPicReviewLog(StrToInt(ssOrderID.Strings[i]),iOrderType,iTgzt,0);
       end;
     end;
-//    DM_DataBase.WriteSynLog(DM_DataBase.ADO_DataRec.SQL.Text);     //记录日志(不使用)
+//    DM_DataBase.WriteSynLog(DM_DataBase.ADO_DataRec.SQL.Text);     //记录同步日志(不使用)
     Application.MessageBox('成功','提示',MB_ICONINFORMATION);
     btn_cx.Click;
     DM_DataBase.Con_YDPrint.CommitTrans;
@@ -439,6 +476,23 @@ begin
     Exit;
   end;
 
+  if not vJSZTSH then
+  begin
+    if cbb_llzt.ItemIndex in [c_llzt_wsd,c_llzt_ysd] then
+    begin
+      p_MessageBoxDlg('无此权限!');
+      Exit;
+    end;
+  end;
+  if not vHGZTSH then
+  begin
+    if cbb_llzt.ItemIndex in [c_llzt_whg,c_llzt_yhg] then
+    begin
+      p_MessageBoxDlg('无此权限!');
+      Exit;
+    end;
+  end;
+  
   bCheck := False;
   for i := 0 to lv_jhxd.Items.Count -1 do
   begin
@@ -446,13 +500,22 @@ begin
     begin
       bCheck := True;
       iOrderType := StrToNum(lv_jhxd.Items[i].SubItems.Strings[lv_jhxd.Items[i].SubItems.Count-2]);
+      sFKZT := lv_jhxd.Items[i].SubItems.Strings[c_fkzt];
       if cbb_llzt.ItemIndex = c_llzt_dy  then
       begin
-        sFKZT := lv_jhxd.Items[i].SubItems.Strings[c_fkzt];
         if sFKZT <> '图稿已合格' then
         begin
           sCPBH := lv_jhxd.Items[i].SubItems.Strings[c_cpbh];
           p_MessageBoxDlg(sCPBH+' 只有是"图稿已合格"状态才可以进行打样!');
+          Exit;
+        end;
+      end else
+      if cbb_llzt.ItemIndex in [c_llzt_whg,c_llzt_yhg]  then
+      begin
+        if sFKZT <> '图稿已收到' then
+        begin
+          sCPBH := lv_jhxd.Items[i].SubItems.Strings[c_cpbh];
+          p_MessageBoxDlg(sCPBH+' 只有是"图稿已收到"状态才可以操作"合格"和"未合格"!');
           Exit;
         end;
       end else
@@ -512,13 +575,13 @@ begin
       end;
       try
         if (cbb_llzt.ItemIndex = c_llzt_dy) then     //打样
-          iRec := obj.setDYQR('wsfj1', '000000',iif(iDfbbz=0,iOrderType,3),sDetailsID,0,StrLeft(sSpbm,17))
+          iRec := obj.setDYQR(g_Web_UserName, g_Web_UserPwd,iif(iDfbbz=0,iOrderType,3),sDetailsID,0,StrLeft(sSpbm,17))
         else
-          iRec := obj.setProductInfo('wsfj1', '000000',iif(iDfbbz=0,iOrderType,3),sDetailsID,sSpbm,cbb_llzt.ItemIndex-1);
+          iRec := obj.setProductInfo(g_Web_UserName, g_Web_UserPwd,iif(iDfbbz=0,iOrderType,3),sDetailsID,sSpbm,cbb_llzt.ItemIndex-1);
       except
         on E: Exception do
         begin
-          f_WriteOperationLog('[图稿状态]反馈申报ID:' +sDetailsID+' 访问出错,'+e.Message,999);
+          f_WriteUserOperationLog('[图稿状态]反馈申报ID:' +sDetailsID+' 访问出错,'+e.Message,999);
           Application.MessageBox(PChar('访问出错,'+e.Message),'提示',MB_ICONINFORMATION);
           Exit;
         end;
@@ -540,32 +603,32 @@ begin
           c_llzt_wsd:
             begin
               iFktgzt := c_wsd;
-              sCzrqFieldName := 'F_dWSD';
-              sCzrFieldName := 'F_iWSDCZRID';
+              sCzrqFieldName := 'F_dFKWSD';
+              sCzrFieldName := 'F_iFKWSDCZRID';
             end;
           c_llzt_ysd:
             begin
               iFktgzt := c_ysd;
-              sCzrqFieldName := 'F_dYSD';
-              sCzrFieldName := 'F_iYSDCZRID';
+              sCzrqFieldName := 'F_dFKYSD';
+              sCzrFieldName := 'F_iFKYSDCZRID';
             end;
           c_llzt_whg:
             begin
               iFktgzt := c_whg;
-              sCzrqFieldName := 'F_dWHG';
-              sCzrFieldName := 'F_iWHGCZRID';
+              sCzrqFieldName := 'F_dFKWHG';
+              sCzrFieldName := 'F_iFKWHGCZRID';
             end;
           c_llzt_yhg:
             begin
               iFktgzt := c_yhg;
-              sCzrqFieldName := 'F_dYHG';
-              sCzrFieldName := 'F_iYHGCZRID';
+              sCzrqFieldName := 'F_dFKYHG';
+              sCzrFieldName := 'F_iFKYHGCZRID';
             end;
           c_llzt_dy:
             begin
               iFktgzt := c_dy;
-              sCzrqFieldName := 'F_dYDY';
-              sCzrFieldName := 'F_iYDYCZRID';
+              sCzrqFieldName := 'F_dFKYDY';
+              sCzrFieldName := 'F_iFKYDYCZRID';
             end;
           c_llzt_dcl:
             begin
@@ -595,10 +658,13 @@ begin
                 ,[iFktgzt,LoginData.m_iUserID,iFktgzt,LoginData.m_iUserID,sDetailsID]);  //改变内部状态为反馈状态
               SQL.Text := SQL.Text+Format(' Update DO_OrderPicDate_Log set %s=getdate(),%s=%d where F_tiOrderType = 0 and F_iOrderID in (%s) '
                 ,[sCzrqFieldName,sCzrFieldName,LoginData.m_iUserID,sOrderID]);
+              SQL.Text := SQL.Text+Format(' Update Log_OrderPicDate set %s=getdate(),%s=%d where F_tiOrderType = 0 and F_iOrderID in (%s) '
+                ,[sCzrqFieldName,sCzrFieldName,LoginData.m_iUserID,sOrderID]);
               //记录来稿时间(第一次操作的时间)
               SQL.Text := SQL.Text+Format(' Update BI_CustomOrderDetails set F_dLGRQ=getdate(), F_sLGCZRBM=''%s'' where IsNull(F_sLGCZRBM,'''') = '''' and F_iDetailsID in (%s) '
                 ,[LoginData.m_sUserName,sDetailsID]);
               ExecSQL;
+              f_WriteOrderPicReviewLog(StrToInt(sOrderID),iOrderType,iFktgzt,1);
             end
             else
             if iOrderType = c_xsx then
@@ -620,6 +686,7 @@ begin
               SQL.Text := SQL.Text+Format(' Update BI_SellOrderDetails set F_dLGRQ=getdate(), F_sLGCZRBM=''%s'' where IsNull(F_sLGCZRBM,'''') = '''' and F_iDetailsID in (%s) '
                 ,[LoginData.m_sUserName,sDetailsID]);
               ExecSQL;
+              f_WriteOrderPicReviewLog(StrToInt(sOrderID),iOrderType,iFktgzt,1);
             end;
           end;
 //          DM_DataBase.WriteSynLog(DM_DataBase.ADO_DataRec.SQL.Text);   //记录日志
@@ -1277,8 +1344,9 @@ begin
   if LoginData.m_iAllowCode >= 0 then
   begin
     iAllowCode := LoginData.m_iAllowCode;
-    sSqlData := 'Select F_iID,F_sCode from Set_AllowInfo where F_tiStatus = 1 and F_sCode in(''%s'',''%s'',''%s'',''%s'',''%s'',''%s'',''%s'') order by F_iID';
-    ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[c_Allow_FWDDTG,c_Allow_TG_CXCFDD,c_Allow_TG_DDSC,c_Allow_TG_DDSCNJBYS,c_Allow_XSDHGDQY,c_Allow_TG_ZTSH,c_Allow_TG_DDCY],False);
+    sSqlData := 'Select F_iID,F_sCode from Set_AllowInfo where F_tiStatus = 1 and F_sCode in(''%s'',''%s'',''%s'',''%s'',''%s'',''%s'',''%s'',''%s'',''%s'') order by F_iID';
+    ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[c_Allow_FWDDTG,c_Allow_TG_CXCFDD,c_Allow_TG_DDSC,c_Allow_TG_DDSCNJBYS,c_Allow_XSDHGDQY,c_Allow_TG_ZTSH,c_Allow_TG_DDCY,
+      c_Allow_TG_JSZTSH,c_Allow_TG_HGZTSH],False);
     if Assigned(ADO_Rec) and (ADO_Rec.RecordCount > 0) then
     begin
       while not ADO_Rec.Eof do
@@ -1379,6 +1447,26 @@ begin
             btn_fk.Tag := 0;
             btn_ok.Tag := 0;
           end;
+        end else
+        if ADO_Rec.FieldByName('F_sCode').AsString = c_Allow_TG_JSZTSH then
+        begin
+          if 1 shl iAllowID or iAllowCode = iAllowCode then
+          begin
+            vJSZTSH := True;
+          end else
+          begin
+            vJSZTSH := False;
+          end;
+        end else
+        if ADO_Rec.FieldByName('F_sCode').AsString = c_Allow_TG_HGZTSH then
+        begin
+          if 1 shl iAllowID or iAllowCode = iAllowCode then
+          begin
+            vHGZTSH := True;
+          end else
+          begin
+            vHGZTSH := False;
+          end;
         end;
 
         ADO_Rec.Next;
@@ -1462,8 +1550,8 @@ begin
       if Assigned(ADOQ_Rec) and (ADOQ_Rec.RecordCount>0) then
       begin
         n:=0;
-        SetLength(TGCYDlgFrm.aCYDDInfo,n);
         TGCYDlgFrm := TTGCYDlgFrm.Create(Self);
+        SetLength(TGCYDlgFrm.aCYDDInfo,n);
         TGCYDlgFrm.lab_cpbh.Caption := sCpbh;
         TGCYDlgFrm.lab_yyl.Caption := StrToNum(SelItem.SubItems.Strings[c_yl])*10000;
         while not ADOQ_Rec.Eof do
@@ -1634,6 +1722,8 @@ begin
 end;
 
 end.
+
+
 
 
 

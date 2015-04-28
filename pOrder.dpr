@@ -115,7 +115,9 @@ uses
   uXQBQInfoFrm in 'Source\uXQBQInfoFrm.pas' {Frm_XQBQInfo},
   uCDFPSKAPI in 'Source\uCDFPSKAPI.pas',
   uTGCYDlgFrm in 'Source\TGSH\uTGCYDlgFrm.pas' {TGCYDlgFrm},
-  UnitAutoComplete in 'Source\Pub\UnitAutoComplete.pas';
+  UnitAutoComplete in 'Source\Pub\UnitAutoComplete.pas',
+  uFrm_WorkOrder_DDTJ in 'Source\WorkOrder\uFrm_WorkOrder_DDTJ.pas' {Frm_WorkOrder_DDTJ},
+  uYSYRJHMCXFrm in 'Source\TJBB\uYSYRJHMCXFrm.pas' {YSYRJHMCX_Frm};
 
 {$R *.res}
 //var
@@ -138,7 +140,7 @@ begin
   begin
     Application.Title := '” µÁ”°À¢≥ß';
     Application.CreateForm(TFrm_Main, Frm_Main);
-  Application.CreateForm(TTGCYDlgFrm, TGCYDlgFrm);
+    //Application.CreateForm(TYSYRJHMCX_Frm, YSYRJHMCX_Frm);
   //Application.CreateForm(TFrm_Main_New, Frm_Main_New);
   end;
   Frm_login.Free;

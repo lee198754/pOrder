@@ -157,9 +157,9 @@ begin
     vdWGTime1 := dtp_wgq.DateTime;
     vdWGTime2 := dtp_wgz.DateTime;
     Frm_DataArcProgress := TFrm_DataArcProgress.Create(Self);
-    TProgress.Create(False);
-    //Frm_DataArcProgress.ShowModal;
-    //Frm_DataArcProgress.Free;
+    uFra_DataArchiving.TProgress.Create(False);
+    Frm_DataArcProgress.ShowModal;
+    Frm_DataArcProgress.Free;
 
 //    Screen.Cursor := crHourGlass;
 //    try

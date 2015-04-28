@@ -392,7 +392,7 @@ begin
         DM_DataBase.Con_History.Connected := True;
         DM_DataBase.ADO_DataRec.Connection := DM_DataBase.Con_History;
       end;
-    end;   
+    end;
     DM_DataBase.ADO_DataRec.Close;
     DM_DataBase.ADO_DataRec.SQL.Text :=  sSqlData;
     DM_DataBase.ADO_DataRec.Open;

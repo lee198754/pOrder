@@ -105,6 +105,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 30
       Width = 121
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 0
     end
@@ -113,6 +114,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 30
       Width = 169
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 1
     end
@@ -129,6 +131,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 321
       Width = 121
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 3
     end
@@ -155,6 +158,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 69
       Width = 169
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 6
     end
@@ -163,6 +167,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 69
       Width = 353
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 7
     end
@@ -171,6 +176,7 @@ object Frm_OrderRecovery: TFrm_OrderRecovery
       Top = 30
       Width = 185
       Height = 22
+      ParentColor = True
       ReadOnly = True
       TabOrder = 8
     end

@@ -542,6 +542,9 @@ begin
           end;
         c_schdjg:
           begin
+            DM_DataBase.Con_YDPrint.CommitTrans;
+            edt_bfjcClick(Sender);
+            Exit;
             iSczt := 4;
             sScrqFieldName := 'F_dYZDRQ';
             sCzrFieldName := 'F_iYZDCZRID';
@@ -1654,7 +1657,7 @@ var
   i, n, iApartID: Integer;
   iWorkID,iJTXXID,iGroupID,iSCZT: Integer;
   ADO_Rec: TADOQuery;
-  sSqlData: string;
+  sSqlData,sGDH: string;
 begin
   for i := 0 to lv_gdmx.Items.Count -1 do
   begin
@@ -1670,6 +1673,7 @@ begin
   with Frm_SCGL_BFJC do
   begin
     stg_BFJC.Clear;
+    sGDH := lv_gd.Selected.SubItems.Strings[c_gdh];
     n := 1;
     for i := 0 to lv_gdmx.Items.Count -1 do
     begin
@@ -1682,6 +1686,8 @@ begin
         stg_BFJC.Cells[c_BFJC_WJCYL,n] := FloatToStr(StrToFloatDef(lv_gdmx.Items[i].SubItems.Strings[c_GDMX_WJCYL],0.000)*10000);
         stg_BFJC.Cells[c_BFJC_BCJCYL,n] := FloatToStr(StrToFloatDef(lv_gdmx.Items[i].SubItems.Strings[c_GDMX_WJCYL],0.000)*10000);
         stg_BFJC.Cells[c_BFJC_DetailsID,n] := lv_gdmx.Items[i].SubItems.Strings[c_GDMX_DetailsID];
+        stg_BFJC.Cells[c_BFJC_KHMC,n] := lv_gdmx.Items[i].SubItems.Strings[c_GDMX_KHMC];
+        stg_BFJC.Cells[c_BFJC_GDH,n] := sGDH;
         Inc(n);
       end;
     end;
@@ -1697,6 +1703,16 @@ begin
   end;
   Frm_SCGL_BFJC.vWorkID := iWorkID;
   Frm_SCGL_BFJC.vJTXXID := iJTXXID;
+  if Sender = edt_bfjc then
+  begin
+    Frm_SCGL_BFJC.Caption := '部分进仓';
+    Frm_SCGL_BFJC.edt_Temp.ReadOnly := False
+  end else
+  if Sender = btn_ok then
+  begin
+    Frm_SCGL_BFJC.Caption := '进仓';
+    Frm_SCGL_BFJC.edt_Temp.ReadOnly := True;
+  end;
   Frm_SCGL_BFJC.ShowModal;
   if Frm_SCGL_BFJC.vSuccess then
   begin

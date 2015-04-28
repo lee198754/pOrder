@@ -47,7 +47,7 @@ var
 implementation
 
 uses
-  uDM_DataBase,uPub_Func;
+  uDM_DataBase,uPub_Func, uPub_Text;
 
 {$R *.dfm}
 
@@ -61,23 +61,24 @@ procedure TFrm_OrderRecovery.btn_QUEDINGClick(Sender: TObject);
 var
   Str,sSqlData:string;
 begin
-  mem_HFYY.Lines.Text:='';
   str:=FormatDateTime('yyyy-mm-dd hh:MM:ss',now);
   try
     DM_DataBase.Con_YDPrint.BeginTrans;
+    f_WriteOrderOperationLog(c_OrderOperation_HF,StrToInt(trim(edt_ddid.text)),0,trim( edt_HFR.text),trim(mem_HFYY.Text));
     if  FOrderType=0 then
     begin
-      sSqlData := 'insert into Log_OrderOperation (F_iType,F_iOrderID,F_tiOrderType,F_sOperatorCode,F_dOperationTime,F_sContent) values (3,'''+trim( edt_ddid.text)+''',0,'''+trim( edt_cxrq.text)+''','''+str+''','''+trim(mem_hfyy.Lines.Text)+''')';
-      sSqlData := sSqlData + ' update BI_CustomOrderDetails set F_tiCXBZ=0,F_sCXYY='''',F_sCXBZ='''',F_dCXRQ = null where F_iID='+trim( edt_ddid.Text);
+//      sSqlData := 'insert into Log_OrderOperation (F_iType,F_iOrderID,F_tiOrderType,F_sOperatorCode,F_dOperationTime,F_sContent) values (3,'+trim( edt_ddid.text)+',0,'''+trim( edt_HFR.text)+''','''+str+''','''+trim(mem_HFYY.Text)+''')';
+      sSqlData := sSqlData + ' update BI_CustomOrderDetails set F_tiCXBZ=0,F_sCXYY='''',F_sCXRBM='''',F_sCXBZ='''',F_dCXRQ = null where F_iID='+trim( edt_ddid.Text);
     end
     else if FOrderType=1 then
     begin
-      sSqlData := 'insert into Log_OrderOperation (F_iType,F_iOrderID,F_tiOrderType,F_sOperatorCode,F_dOperationTime,F_sContent) values (3,'''+trim( edt_ddid.text)+''',1,'''+trim(edt_cxrq.text)+''','''+str+''','''+trim(mem_hfyy.Lines.Text)+''')';
-      sSqlData := sSqlData + ' update BI_SellOrderDetails set F_tiCXBZ=0,F_sCXBZ='''',F_sCXBZ='''',F_dCXRQ = null where F_iID='+trim(edt_ddid.Text);
+//      sSqlData := 'insert into Log_OrderOperation (F_iType,F_iOrderID,F_tiOrderType,F_sOperatorCode,F_dOperationTime,F_sContent) values (3,'+trim(edt_ddid.text)+',1,'''+trim( edt_HFR.text)+''','''+str+''','''+trim(mem_HFYY.Text)+''')';
+      sSqlData := sSqlData + ' update BI_SellOrderDetails set F_tiCXBZ=0,F_sCXYY='''',F_sCXRBM='''',F_sCXBZ='''',F_dCXRQ = null where F_iID='+trim(edt_ddid.Text);
     end;
     DM_DataBase.ExecQuery(sSqlData,[],True);
     DM_DataBase.Con_YDPrint.CommitTrans;
     p_MessageBoxDlg('恢复成功！');
+    ModalResult := mrOk;
     Close;
   except
     on E: Exception do
@@ -98,6 +99,7 @@ begin
   i:=strlen(StrM);
   i:=i div 2+1;
   lbl_sczts.Caption:=Format('还可以输入%d 个字',[100-i]);
+
 end;
 
 end.

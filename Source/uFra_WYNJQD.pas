@@ -21,13 +21,13 @@ type
     stg_wynjqd: Ti_StgEdit;
     rmr_WYNJQD: TRMGridReport;
     rmdb_WYNJQD: TRMDBDataSet;
-    ADO_WYNJQD: TADOQuery;
     btn_export: TRzButton;
     procedure btn_cxClick(Sender: TObject);
     procedure btn_dyClick(Sender: TObject);
     procedure btn_exportClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_WYNJQD: TADOQuery;
     procedure ReadWYNJQD(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -74,14 +74,16 @@ end;
 
 procedure TFra_WYNJQD.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
 begin
   sCxq := FormatDateTime('yyyyMMdd',dtp_cxq.DateTime)+' 00:00:00';
   sCxz := FormatDateTime('yyyyMMdd',dtp_cxz.DateTime)+' 23:59:59';
-  ADO_WYNJQD.Close;
-  ADO_WYNJQD.SQL.Text := Format('exec p_wynjqd  ''%s'',''%s'' ',[sCxq,sCxz]);
-  ADO_WYNJQD.Open;
+  if Assigned(ADO_WYNJQD) then ADO_WYNJQD.Free;
+  ADO_WYNJQD := DM_DataBase.OpenQuery('exec p_wynjqd  ''%s'',''%s'' ',[sCxq,sCxz]);
+  rmdb_WYNJQD.DataSet := ADO_WYNJQD;
+//  ADO_WYNJQD.Close;
+//  ADO_WYNJQD.SQL.Text := Format('exec p_wynjqd  ''%s'',''%s'' ',[sCxq,sCxz]);
+//  ADO_WYNJQD.Open;
   ReadWYNJQD(ADO_WYNJQD);
 end;
 

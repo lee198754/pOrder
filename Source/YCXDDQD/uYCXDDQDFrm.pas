@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, iGrid, StdCtrls, ComCtrls, DB, ADODB, GridRow,
   RM_Dataset, RM_System, RM_Common, RM_Class, RM_GridReport, Menus,
-  ActnList,uBaseForm;
+  ActnList,uBaseForm, ButtonEdit;
 
 type
   TFrm_YCXDDQD = class(TFrmFrame)
@@ -29,6 +29,7 @@ type
     pmi_ddmx: TMenuItem;
     pmi_ddmxPic: TMenuItem;
     N4: TMenuItem;
+    edt_cpbh: Ti_TxtFilter;
     procedure btn_CHAXUNClick(Sender: TObject);
     procedure btn_DAOCHUClick(Sender: TObject);
     procedure btn_DAYINClick(Sender: TObject);
@@ -37,6 +38,7 @@ type
     procedure pmi_ddmxClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_YCXDDQD: TADOQuery;
   public
     { Public declarations }
     procedure FraShow;
@@ -48,16 +50,16 @@ var
 implementation
 
 uses
-  uOrderRecoveryFrm,uDM_DataBase,DateUtils,PubStr,uDDMX_DZX,uDDMX_XSX;
+  uOrderRecoveryFrm,uDM_DataBase,DateUtils,PubStr,uDDMX_DZX,uDDMX_XSX,uPub_Type;
 
 {$R *.dfm}
 
 const
-  c_ddcxyy: integer=0;
-  c_cxbz:integer=1;
-  c_cxrmz:integer=2;
-  c_cxrq:integer=3;
-  c_ddbh:integer=4;
+  c_ddbh:integer=0;
+  c_ddcxyy: integer=1;
+  c_cxbz:integer=2;
+  c_cxrmz:integer=3;
+  c_cxrq:integer=4;
   c_ddxdsj:integer=5;
   c_yztmc:integer=6;
   c_ddid:integer=7;
@@ -67,40 +69,46 @@ const
 procedure TFrm_YCXDDQD.btn_CHAXUNClick(Sender: TObject);
 var
   i:Integer;
-  qrq,zrq, sSqlData:string;
+  qrq,zrq, sCpbh,sSqlData:string;
   ADO_Rec: TADOQuery;
 begin
   qrq:=format('%s %s',[datetostr(dtb_begin.Date),'00:00:00']);
   zrq:=format('%s %s',[Datetostr(dtb_end.date),'23:59:59']);
-  sSqlData := format('exec  p_ycxddqd ''%s'',''%s''',[qrq,zrq]);
-  ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[]);
-  if Assigned(ADO_Rec) and (ADO_Rec.RecordCount > 0) then
+  sCpbh := Trim(edt_cpbh.Text);
+  sSqlData := format('exec  p_ycxddqd ''%s'',''%s'',''%s''',[qrq,zrq,sCpbh]);
+  if Assigned(ADO_YCXDDQD) then ADO_YCXDDQD.free;
+  ADO_YCXDDQD := DM_DataBase.OpenQuery(sSqlData,[]);
+  rmd_DateSet.DataSet := ADO_YCXDDQD;
+  if Assigned(ADO_YCXDDQD) and (ADO_YCXDDQD.RecordCount > 0) then
   begin
-    i:=1;
-    Stg_CHAXUN.RowCount := iif(ADO_Rec.RecordCount > 0, ADO_Rec.RecordCount +1, 2);
-    while  not ADO_Rec.Eof do
+    with ADO_YCXDDQD do
     begin
-      Stg_CHAXUN.Cells[c_ddcxyy,i]:=ADO_Rec.fieldbyname('CXYY').AsString;
-      Stg_CHAXUN.Cells[c_cxbz,i]:=ADO_Rec.fieldbyname('CXBZ').asstring;
-      Stg_CHAXUN.cells[c_cxrmz,i]:=ADO_Rec.fieldbyname('CXR').AsString;
-      Stg_CHAXUN.Cells[c_cxrq,i]:=ADO_Rec.FIELDBYNAME('CXRQ').AsString;
-      Stg_CHAXUN.Cells[c_ddbh,i]:=ADO_Rec.fieldbyname('CPBH').asstring;
-      Stg_CHAXUN.Cells[c_ddxdsj,i]:=ADO_Rec.fieldbyname('JSRQ').AsString;
-      Stg_CHAXUN.Cells[c_yztmc,i]:=ADO_Rec.fieldbyname('Yztmc').AsString;
-      Stg_CHAXUN.cells[c_ddid,i]:=ADO_Rec.fieldbyname('OrderID').AsString;
-      Stg_CHAXUN.Cells[c_ddlx,i]:=ADO_Rec.fieldbyname('OrderType').AsString;
-      Stg_CHAXUN.Cells[c_oprator,i]:=ADO_Rec.fieldbyname('CZRBM').AsString;
-      i:=i+1;
-      ADO_Rec.Next;
+      i:=1;
+      Stg_CHAXUN.RowCount := iif(RecordCount > 0, RecordCount +1, 2);
+      while  not Eof do
+      begin
+        Stg_CHAXUN.Cells[c_ddcxyy,i]:=fieldbyname('CXYY').AsString;
+        Stg_CHAXUN.Cells[c_cxbz,i]:=fieldbyname('CXBZ').asstring;
+        Stg_CHAXUN.cells[c_cxrmz,i]:=fieldbyname('CXR').AsString;
+        Stg_CHAXUN.Cells[c_cxrq,i]:=FIELDBYNAME('CXRQ').AsString;
+        Stg_CHAXUN.Cells[c_ddbh,i]:=fieldbyname('CPBH').asstring;
+        Stg_CHAXUN.Cells[c_ddxdsj,i]:=fieldbyname('JSRQ').AsString;
+        Stg_CHAXUN.Cells[c_yztmc,i]:=fieldbyname('Yztmc').AsString;
+        Stg_CHAXUN.cells[c_ddid,i]:=fieldbyname('OrderID').AsString;
+        Stg_CHAXUN.Cells[c_ddlx,i]:=fieldbyname('OrderType').AsString;
+        Stg_CHAXUN.Cells[c_oprator,i]:=fieldbyname('CZRBM').AsString;
+        i:=i+1;
+        Next;
+      end;
+      gb_cxxx.Caption:=format('%s   总条数 %d行',['已撤销订单信息',RecordCount]);
     end;
-    gb_cxxx.Caption:=format('%s   总条数 %d行',[gb_cxxx.caption,ADO_Rec.RecordCount]);
-    ADO_Rec.Free;
+    //ADO_Rec.Free;
   end;
 end;
 
 procedure TFrm_YCXDDQD.btn_DAOCHUClick(Sender: TObject);
 begin
-   GridRow_X1.p_SaveToExcel(Stg_CHAXUN,['订单撤销原因','撤销备注','撤销人真实姓名','撤销日期','订单编号','订单下达时间','ss邮资图名称','订单ID','订单类型'],[0,1,2,3,4,5,6,7,8],[0,0,0,0,0,0,0,1,1],true);
+   GridRow_X1.p_SaveToExcel(Stg_CHAXUN,['订单编号','订单撤销原因','撤销备注','撤销人真实姓名','撤销日期','订单下达时间','ss邮资图名称','订单ID','订单类型'],[0,1,2,3,4,5,6,7,8],[0,0,0,0,0,0,0,1,1],true);
 end;
 
 procedure TFrm_YCXDDQD.btn_DAYINClick(Sender: TObject);
@@ -122,8 +130,10 @@ begin
     Frm_OrderRecovery.edt_cpbh.Text:= Stg_CHAXUN.Cells[c_ddbh,liRow];
     Frm_OrderRecovery.edt_czrbm.Text:= Stg_CHAXUN.Cells[c_oprator,liRow];
     Frm_OrderRecovery.edt_ddid.Text:= Stg_CHAXUN.Cells[c_ddid,liRow];
+    Frm_OrderRecovery.edt_HFR.Text:= LoginData.m_sUserName;
     Frm_OrderRecovery.FOrderType:=StrToInt(Stg_CHAXUN.Cells[c_ddlx,liRow]);
-    Frm_OrderRecovery.ShowModal;
+    if Frm_OrderRecovery.ShowModal = mrok then
+      Stg_CHAXUN.DelRow(Stg_CHAXUN.Row);
     Frm_OrderRecovery.Free;
 end;
 

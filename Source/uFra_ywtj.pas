@@ -30,7 +30,6 @@ type
     Label7: TLabel;
     rmr_YWTJ: TRMGridReport;
     rmdb_YWTJ: TRMDBDataSet;
-    ADO_YWTJ: TADOQuery;
     btn_dy: TButton;
     Label1: TLabel;
     cbb_cplb: Ti_ComboBox;
@@ -46,6 +45,7 @@ type
   private
     { Private declarations }
     vPlaceCode: string;
+    ADO_YWTJ: TADOQuery;
     procedure ReadYWTJ(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -99,7 +99,6 @@ end;
 
 procedure TFra_ywtj.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb, iXPL: integer;
 begin
@@ -111,11 +110,12 @@ begin
     1: iXPL := 0;
     2: iXPL := 1;
   end;
-
- // ADO_Rec := DM_DataBase.OpenQuery('Exec p_ywtj ''%s'',''%s''',[sCxq,sCxz]);
-  ADO_YWTJ.Close;
-  ADO_YWTJ.SQL.Text := Format('Exec p_ywtj ''%s'',''%s'',%d,''%s'',''%d'' ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
-  ADO_YWTJ.Open;
+  if Assigned(ADO_YWTJ) then ADO_YWTJ.Free;
+  ADO_YWTJ := DM_DataBase.OpenQuery('Exec p_ywtj ''%s'',''%s'',%d,''%s'',''%d'' ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
+  rmdb_YWTJ.DataSet := ADO_YWTJ;
+//  ADO_YWTJ.Close;
+//  ADO_YWTJ.SQL.Text := Format('Exec p_ywtj ''%s'',''%s'',%d,''%s'',''%d'' ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
+//  ADO_YWTJ.Open;
   ReadYWTJ(ADO_YWTJ);
  // ADO_Rec.Free;
 

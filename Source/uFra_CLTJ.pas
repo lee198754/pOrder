@@ -21,12 +21,12 @@ type
     RzGroupBox2: TRzGroupBox;
     rmr_CLTJ: TRMGridReport;
     rmdb_CLTJ: TRMDBDataSet;
-    ADO_CLTJ: TADOQuery;
     stg_cltj: Ti_StgEdit;
     procedure btn_cxClick(Sender: TObject);
     procedure btn_dyClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_CLTJ: TADOQuery;
     procedure ReadCLTJ(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -38,7 +38,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uPub_Func, uPub_Text, uPub_Type, PubStr;
+  uPub_Func, uPub_Text, uPub_Type, PubStr, uDM_DataBase;
 
 { TFra_CLTJ }
 
@@ -90,10 +90,12 @@ begin
   sCxq := FormatDateTime('yyyyMMdd',dtp_cxq.DateTime)+' 00:00:00';
   sCxz := FormatDateTime('yyyyMMdd',dtp_cxz.DateTime)+' 23:59:59';
   iCplb := FindProductCategoryID(cbb_cplb.ItemIndex);
-  //ADO_Rec := DM_DataBase.OpenQuery('Exec p_sctj ''%s'',''%s''',[sCxq,sCxz]);
-  ADO_CLTJ.Close;
-  ADO_CLTJ.SQL.Text := Format('Exec p_cltj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
-  ADO_CLTJ.Open;
+  if Assigned(ADO_CLTJ) then ADO_CLTJ.Free;
+  ADO_CLTJ := DM_DataBase.OpenQuery('Exec p_cltj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+  rmdb_CLTJ.DataSet := ADO_CLTJ;
+//  ADO_CLTJ.Close;
+//  ADO_CLTJ.SQL.Text := Format('Exec p_cltj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+//  ADO_CLTJ.Open;
   ReadCLTJ(ADO_CLTJ);
 //  ADO_Rec.Free;
 end;

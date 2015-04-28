@@ -1,6 +1,6 @@
 object Fra_ddcx: TFra_ddcx
-  Left = 327
-  Top = 211
+  Left = 313
+  Top = 152
   Width = 800
   Height = 554
   Color = clBtnFace
@@ -39,6 +39,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 14
       Width = 137
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 42
       EditLabel.Height = 12
       EditLabel.Caption = #29256' '#21035#65306
@@ -96,6 +99,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 46
       Width = 137
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #20135#21697#31867#21035#65306
@@ -113,6 +119,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 46
       Width = 137
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #20135#21697#31867#22411#65306
@@ -133,6 +142,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 14
       Width = 73
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #24180#20221#26631#35782#65306
@@ -185,6 +197,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 16
       Width = 97
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 72
       EditLabel.Height = 12
       EditLabel.Caption = #26159#21542#23567#25209#37327#65306
@@ -248,6 +263,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 46
       Width = 97
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #29983#20135#36827#24230#65306
@@ -380,6 +398,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 46
       Width = 88
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #22270#31295#29366#24577#65306
@@ -408,6 +429,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 110
       Width = 177
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #25552#37266#31867#22411#65306
@@ -471,6 +495,9 @@ object Fra_ddcx: TFra_ddcx
       Top = 142
       Width = 81
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #37325#21360#26631#24535#65306

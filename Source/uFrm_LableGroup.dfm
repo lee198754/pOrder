@@ -103,6 +103,7 @@ object Frm_LableGroup: TFrm_LableGroup
     TabOrder = 3
     Text = 'edt_Temp'
     OnExit = edt_TempExit
+    OnKeyPress = edt_TempKeyPress
   end
   object btn_hdrl: TButton
     Left = 344

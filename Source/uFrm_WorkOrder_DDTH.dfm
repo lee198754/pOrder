@@ -1,6 +1,6 @@
 object Frm_ddth: TFrm_ddth
-  Left = 500
-  Top = 185
+  Left = 383
+  Top = 80
   Width = 800
   Height = 600
   Caption = #35746#21333#26367#25442

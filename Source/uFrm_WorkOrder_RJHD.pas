@@ -151,7 +151,11 @@ procedure TFrm_WorkOrder_RJHD.stg_RJHDSelectCell(Sender: TObject; ACol,
 begin
   if stg_RJHD.RowCount = ARow+1 then
     stg_RJHD.RowCount := stg_RJHD.RowCount +1;
-    
+  if ACol in [c_ZH] then
+    edt_Temp.CharCase := ecUpperCase
+  else
+    edt_Temp.CharCase := ecNormal;
+
 
 end;
 

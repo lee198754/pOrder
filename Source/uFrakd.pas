@@ -522,6 +522,41 @@ begin
         lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_iID').AsString);
         lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(IntToStr(iType));
         lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('ApartID').AsString);
+      end else
+      if iType = 2 then
+      begin
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sJg').AsString);
+        if FieldByName('LRBZ').AsInteger > 0 then
+          sCPBH := '*'+FieldByName('CPBH').AsString
+        else
+          sCPBH := FieldByName('CPBH').AsString;
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(sCPBH);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('CPLX').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sYztmc').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('LGRQ').AsString);
+        //lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sCpmc').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sKhmc').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('ZYL').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sQttsgyms').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_sFJGY').AsString);
+        case FieldByName('F_tiJybz').AsInteger of
+          0: sJybz:= '无';
+          1: sJybz:= '加印';
+        end;
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(sJybz);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('CYBZ').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('SYYL').AsString);
+        case FieldByName('F_tiQy').AsInteger of
+          0: sQy:= '不签样';
+          1: sQy:= '签样';
+        end;
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(sQy);
+
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add('否');
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add('无');
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('F_iID').AsString);
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(IntToStr(iType));
+        lv_jhxd.Items.Item[lv_jhxd.Items.Count -1].SubItems.Add(FieldByName('ApartID').AsString);
       end;
       Next;
     end;
@@ -861,16 +896,32 @@ begin
   //  iIndex := viItemIndex;
   //------判断生成工单号条件是否满足------------------------------------
   if OrderData[iIndex].m_iType = 0 then
-    sSqlData := 'Select e.F_sPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle '
-      +' from DO_OrderApart a,BI_CustomOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
-      +' where a.F_iOrderID=b.F_iID and a.F_tiCXBZ = 0 and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
-      +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d '
+  begin
+//    sSqlData := 'Select e.F_sPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle '
+//      +' from DO_OrderApart a,BI_CustomOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
+//      +' where a.F_iOrderID=b.F_iID and a.F_tiCXBZ = 0 and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
+//      +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d ';
+    sSqlData :=  ' SELECT d.F_sPrefixCode,d.F_sSmallPrefixCode,d.F_sNFGBRQ,d.F_sPrefixStyle,d.F_sSmallPrefixStyle '
+      +' FROM DO_OrderApart  a,dbo.BI_CustomOrderDetails b,Set_PostageType c,Set_ProductType d '
+      +' WHERE c.F_iProductTypeID=d.F_iID AND a.F_iOrderID=b.F_iID AND c.F_iID=dbo.f_GetpostageID(b.F_sCpbh,a.F_sYztmc) AND a.F_iID=%d and a.F_tiCXBZ = 0 '
+  end
   else if OrderData[iIndex].m_iType = 1 then
-    sSqlData := 'Select e.F_sPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle '
-      +' from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
-      +' where a.F_iOrderID=b.F_iID and a.F_tiCXBZ = 0 and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
-      +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d ';
-
+  begin
+//    sSqlData := 'Select e.F_sPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle '
+//      +' from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
+//      +' where a.F_iOrderID=b.F_iID and a.F_tiCXBZ = 0 and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
+//      +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d ';
+    sSqlData :=  ' SELECT d.F_sPrefixCode,d.F_sSmallPrefixCode,d.F_sNFGBRQ,d.F_sPrefixStyle,d.F_sSmallPrefixStyle '
+      +' FROM DO_OrderApart  a,dbo.BI_SellOrderDetails b,Set_PostageType c,Set_ProductType d '
+      +' WHERE c.F_iProductTypeID=d.F_iID AND a.F_iOrderID=b.F_iID AND c.F_iID=dbo.f_GetpostageID(b.F_sCpbh,a.F_sYztmc) AND a.F_iID=%d and a.F_tiCXBZ = 0 '
+  end
+  else if OrderData[iIndex].m_iType = 2 then
+  begin
+    sSqlData := 'Select d.NoPrefix,d.TheYear,d.TheMonth,d.TheDay,d.SeriesNo '
+      +' from DO_OrderApart a,DO_SaleOrderDetail b,DO_SaleOrder c,Sys_BillNO d  '
+      +' where a.F_iOrderID=b.F_iOrderID and b.F_sSysCode=c.F_sSysCode and a.F_iID=%d and c.F_sSalesType=d.NoType '
+      +' and c.F_bClose = 0 ';
+  end;
   ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[iIndex].m_iApartID],False);
   if ADO_Rec = nil then
   begin
@@ -881,7 +932,11 @@ begin
   sPrefixCode := '';
   if ADO_Rec.RecordCount > 0 then
   begin
-    if trim(ADO_Rec.FieldByName('F_sPrefixStyle').AsString) = '' then
+    if OrderData[iIndex].m_iType in [0,1] then
+      sPrefixStyle :=  'F_sPrefixStyle'
+    else if OrderData[iIndex].m_iType=2 then
+      sPrefixStyle :=  'NoPrefix';
+    if trim(ADO_Rec.FieldByName(sPrefixStyle).AsString) = '' then
     begin
       p_MessageBoxDlg('请先设置工单号前缀!');
       TRzBitBtn(Sender).Caption := '开工单';

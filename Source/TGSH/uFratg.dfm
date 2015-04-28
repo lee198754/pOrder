@@ -93,6 +93,9 @@ object Fra_tg: TFra_tg
       Top = 24
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #20135#21697#31867#21035':'
@@ -119,6 +122,9 @@ object Fra_tg: TFra_tg
       Top = 24
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #20135#21697#31867#22411':'
@@ -139,6 +145,9 @@ object Fra_tg: TFra_tg
       Top = 88
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #31614#26679#26041#24335':'
@@ -171,6 +180,9 @@ object Fra_tg: TFra_tg
       Top = 56
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #22270#31295#29366#24577':'
@@ -199,6 +211,9 @@ object Fra_tg: TFra_tg
       Top = 120
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 42
       EditLabel.Height = 12
       EditLabel.Caption = #29256' '#21035#65306
@@ -221,6 +236,9 @@ object Fra_tg: TFra_tg
       Top = 120
       Width = 97
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 66
       EditLabel.Height = 12
       EditLabel.Caption = #26159#21542#23567#25209#37327':'
@@ -243,6 +261,9 @@ object Fra_tg: TFra_tg
       Top = 54
       Width = 73
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 60
       EditLabel.Height = 12
       EditLabel.Caption = #24180#20221#26631#35782#65306
@@ -265,6 +286,9 @@ object Fra_tg: TFra_tg
       Top = 88
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #21453#39304#29366#24577':'
@@ -292,6 +316,9 @@ object Fra_tg: TFra_tg
       Top = 88
       Width = 140
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 54
       EditLabel.Height = 12
       EditLabel.Caption = #26159#21542#31614#26679':'
@@ -364,6 +391,9 @@ object Fra_tg: TFra_tg
       Top = 26
       Width = 120
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 30
       EditLabel.Height = 12
       EditLabel.Caption = #29366#24577':'
@@ -738,12 +768,12 @@ object Fra_tg: TFra_tg
   object ImageList1: TImageList
     Height = 20
     Width = 0
-    Left = 744
-    Top = 136
+    Left = 728
+    Top = 8
   end
   object pm_jhxd: TPopupMenu
     Left = 664
-    Top = 144
+    Top = 8
     object menu_cxfj: TMenuItem
       Caption = #37325#26032#25286#20998#35746#21333
       Enabled = False
@@ -779,7 +809,7 @@ object Fra_tg: TFra_tg
   object SavePath: TSaveDialog
     DefaultExt = 'xls'
     Filter = 'Excel'#25991#20214'(*.xls)|*.xls'
-    Left = 728
-    Top = 112
+    Left = 696
+    Top = 8
   end
 end

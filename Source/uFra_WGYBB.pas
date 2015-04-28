@@ -22,7 +22,6 @@ type
     stg_wgybb: Ti_StgEdit;
     rmr_WGYBB: TRMGridReport;
     rmdb_WGYBB: TRMDBDataSet;
-    ADO_WGYBB: TADOQuery;
     btn_export: TRzButton;
     cbb_bb: Ti_ComboBox;
     cbb_xpl: Ti_ComboBox;
@@ -32,6 +31,7 @@ type
     procedure btn_exportClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_WGYBB: TADOQuery;
     procedure ReadWGYBB(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -46,22 +46,23 @@ uses
 {$R *.dfm}
 
 const
-  c_GDH      = 0;
-  c_PM       = 1;
-  c_XPL      = 2;
-  c_KDRQ     = 3;
-  c_JCRQ     = 4;
-  c_YZDJ     = 5;
-  c_TSGYFDJ  = 6;
-  c_SL       = 7;
-  c_YZJE     = 8;
-  c_CLFY     = 9;
-  c_GroupID  = 10;
-  c_WorkID   = 11;
+  c_GDH          = 0;
+  c_PM           = 1;
+  c_XPL          = 2;
+  c_KDRQ         = 3;
+  c_JCRQ         = 4;
+  c_YZDJ         = 5;
+  c_TSGYFDJ      = 6;
+  c_FQTTSGYFDJ   = 7;
+  c_NJQTTSGYFDJ  = 8;
+  c_SL           = 9;
+  c_YZJE         = 10;
+  c_CLFY         = 11;
+  c_GroupID      = 12;
+  c_WorkID       = 13;
 
 procedure TFra_WGYBB.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb,iXPL,iOrderType: integer;
 begin
@@ -85,9 +86,12 @@ begin
     iOrderType := -1;
   end;
   try
-    ADO_WGYBB.Close;
-    ADO_WGYBB.SQL.Text := Format('Exec p_wgybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
-    ADO_WGYBB.Open;
+    if Assigned(ADO_WGYBB) then ADO_WGYBB.Free;
+    ADO_WGYBB := DM_DataBase.OpenQuery('Exec p_wgybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
+    rmdb_WGYBB.DataSet := ADO_WGYBB;
+//    ADO_WGYBB.Close;
+//    ADO_WGYBB.SQL.Text := Format('Exec p_wgybb ''%s'',''%s'',%d,%d,%d',[sCxq,sCxz,iCplb,iOrderType,iXpl]);
+//    ADO_WGYBB.Open;
     ReadWGYBB(ADO_WGYBB);
   except
     on E: Exception do
@@ -158,6 +162,8 @@ begin
       stg_wgybb.cells[c_JCRQ,n]    := FormatDateTime('yyyy-MM-dd hh:mm:ss',FieldByName('JCRQ').AsDateTime) ;
       stg_wgybb.cells[c_YZDJ,n]    := FieldByName('YZDJ').AsString ;
       stg_wgybb.cells[c_TSGYFDJ,n] := FieldByName('TSGYFDJ').AsString ;
+      stg_wgybb.cells[c_FQTTSGYFDJ,n] := FieldByName('FQTTSGYFDJ').AsString ;
+      stg_wgybb.cells[c_NJQTTSGYFDJ,n] := FieldByName('NJQTTSGYFDJ').AsString ;
       stg_wgybb.cells[c_SL,n]      := FieldByName('SL').AsString ;
       stg_wgybb.cells[c_YZJE,n]    := FieldByName('YZJE').AsString ;
       stg_wgybb.cells[c_CLFY,n]    := FieldByName('CLFY').AsString ;
@@ -227,12 +233,12 @@ procedure TFra_WGYBB.btn_exportClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    DM_DataBase.gr_dc.p_SaveToExcel(stg_wgybb,['工单号','品名','小批量','开单日期',
-      '进仓日期','印制单价','特殊工艺费单价','数量(枚)',
+    if DM_DataBase.gr_dc.p_SaveToExcel(stg_wgybb,['工单号','品名','小批量','开单日期',
+      '进仓日期','印制单价','特殊工艺费单价','封其它特殊工艺费单价','内件其它特殊工艺费单价','数量(枚)',
       '印制金额','材料费用'],[c_GDH,c_PM,c_XPL,c_KDRQ,c_JCRQ,c_YZDJ,
-      c_TSGYFDJ,c_SL,c_YZJE,c_CLFY],[0,0,0,0,0,0,0,0,
-      0,0],False);
-    p_MessageBoxDlg('导出成功!');
+      c_TSGYFDJ,c_FQTTSGYFDJ,c_NJQTTSGYFDJ,c_SL,c_YZJE,c_CLFY],[0,0,0,0,0,0,0,0,0,0,
+      0,0],False) <> '' then
+      p_MessageBoxDlg('导出成功!');
   except
     p_MessageBoxDlg('导出失败!');
   end;

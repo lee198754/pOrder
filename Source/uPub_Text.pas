@@ -4,7 +4,8 @@ interface
 
 const
   //c_TitleName = '印刷厂ERP系统贺卡子系统 V1.0 ';
-  c_TitleName = '邮电印刷厂 v3.0.13 ';
+  c_TitleName = '邮电印刷厂 v3.0.15_3';
+
 
 resourcestring
   c_Reg_Login_CookiePath     = 'SOFTWARE\YDPrint\Cookie\Frm_Login\';  {Frm_login}
@@ -16,21 +17,25 @@ resourcestring
   c_Reg_GXTJ_CookiePath      = 'SOFTWARE\YDPrint\Cookie\Frm_WorkOrder_ZB_GXTJ\';  {Frm_WorkOrder_ZB_GXTJ}
   c_Reg_MachineManage_CookiePath = 'SOFTWARE\YDPrint\Cookie\Frm_MachineManage\';  {Frm_MachineManage}
 
-const
+const                              
   {Frm_login}  //暂不用
   UpdateUser='ydysca';
   UpdatePwd='ydys';
   AutoUpdatePath= '\\172.29.116.7\公共区\贺卡2011客户端软件\';
 
-const
-  c_Web_UserName = 'wsfj1';
-  c_Web_UserPwd = '000000';
+var
+  g_Web_UserName: string = 'wsfj1';
+  g_Web_UserPwd: string = '000000';
+
+  g_DatabaseUserName: string = 'yd';
+  g_DatabaseUserPwd: string = '000000';
+  g_PicUrl: string ='http://211.156.193.135/FPKIMG/';  //图稿下载地址
+  g_PicPath: string ='OrderPic\';                   //服务器中图稿路径前缀
+
+  g_DownLoadPicPort: integer = 8011;                //图稿下载服务端的端口号
+  g_NetClientDLL: string = 'NetClient_D.dll';     //网络交互DLL
 
 const
-  c_PicUrl='http://211.156.193.135/FPKIMG/';  //图稿下载地址                                                                                           
-  c_DownLoadPicPort = 8011;                //图稿下载服务端的端口号
-  c_NetClientDLL = 'NetClient_D.dll';     //网络交互DLL
-  c_PicPath='OrderPic\';                   //服务器中图稿路径前缀
   c_TempPicPath = 'YDPrint\YDPicCache\';          //临时文件夹目录名称
 
 const
@@ -174,7 +179,9 @@ const
   c_BFJC_KDYL    = 1;
   c_BFJC_WJCYL   = 2;
   c_BFJC_BCJCYL  = 3;
-  c_BFJC_DetailsID = 4;
+  c_BFJC_KHMC    = 4;
+  c_BFJC_GDH     = 5;
+  c_BFJC_DetailsID = 6;
 
 const
   {Set_AllowInfo}
@@ -186,6 +193,8 @@ const
   c_Allow_TG_DDCY        = 'TG_DDCY';              //'操作订单重印';
   c_Allow_TG_DDSCNJBYS   = 'TG_DDSCNJBYS';         //'操作订单删除内件(不印刷)';
   c_Allow_TG_ZTSH        = 'TG_ZTSH';              //'操作图稿状态审核'
+  c_Allow_TG_JSZTSH      = 'TG_JSZTSH';            //'操作图稿接收状态审核'
+  c_Allow_TG_HGZTSH      = 'TG_HGZTSH';            //'操作图稿合格状态审核'
   c_Allow_TG_DDSC        = 'TG_DDSC';              //'操作订单删除';
   c_Allow_ZB_OK          = 'ZB_OK';                //'生产管理中制版的确认';
   c_Allow_YS_OK          = 'YS_OK';                //'生产管理中印刷的确认';
@@ -267,8 +276,21 @@ const
   c_XQRJHDPP = '检查箱签兑奖号码数量与订单印量是否匹配';
   c_FHFKRJHDPP = '检查发货反馈兑奖号码数量与订单印量是否匹配';
 
+const
+  {Log_OrderOperation}
+  c_OrderOperation_CX = 2;    //订单撤销操作类型标志
+  c_OrderOperation_HF = 3;    //订单撤恢复作类型标志
+
 implementation
 
 end.
+
+
+
+
+
+
+
+
 
 

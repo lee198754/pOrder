@@ -88,7 +88,9 @@ type
   function CovFileDate(Fd:_FileTime):TDateTime;  //文件日期格式转正常日期格式
   procedure DelFileList(_Path: string;_Size: Int64);   //超过大小按日期顺序删除文件
   procedure DelTempPic;    //超过大小按日期顺序删除临时下载的图稿
-  function f_WriteOperationLog(_sOperation: string;_iFlag: Integer=0):Boolean;
+  function f_WriteUserOperationLog(_sOperation: string;_iFlag: Integer=0):Boolean;
+  function f_WriteOrderOperationLog(AiType: Integer;AiOrderID: Integer;AtiOrderType: Integer;AsOperatorCode: string;AsContent: string): Boolean;
+  function f_WriteOrderPicReviewLog(AiOrderID: Integer; AtiOrderType: Integer; AiTGZT: Integer; AiFKBZ: Integer): Boolean;
 //  function Zip(ZipMode,PackSize:Integer;ZipFile,UnzipDir:String):Boolean; //压缩或解压缩文件
   type
     TStgFieldInfo = record
@@ -1344,7 +1346,7 @@ end;
 
 function f_CheckRJHD(RJHD: TArrRJHD):TArrRJHD;      //判断兑奖号码是否重复
 var
-  sSqlData: string;
+  sSqlData,sIDs: string;
   ADO_Rec: TADOQuery;
   i,j,Len: Integer;
 begin
@@ -1375,7 +1377,13 @@ begin
     end;
 
   end;
-
+  //获取本次录入订单的所有兑奖号码(DO_WorkOrderDetGroupNum)的ID
+  for i := 0 to Length(RJHD) -1 do
+  begin
+    if RJHD[i].m_iID >0 then
+      sIDs := sIDs + ','+IntToStr(RJHD[i].m_iID);
+  end;
+  if sIDs <> '' then sIDs := Copy(sIDs,2,Length(sIDs)-1);
 
   for i := 0 to Length(RJHD) -1 do
   begin
@@ -1388,18 +1396,24 @@ begin
         + ' and ( F_sRJHDQ <= right(''000000''+''%s'',6) and F_sRJHDZ >= right(''000000''+''%s'',6) '
         + ' or F_sRJHDQ <= right(''000000''+''%s'',6) and F_sRJHDZ >= right(''000000''+''%s'',6) ) '
         + ' and SubString(b.F_sCPBH,1,2)=''%s'''
-        + ' and a.F_iID <> %d)',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2),RJHD[i].m_iID]);
+        //+ ' and a.F_iID <> %d)',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2),RJHD[i].m_iID]);
+        + ' )',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2)]);
     end else
     begin
       sSqlData := sSqlData + format(' or ( F_sZH=''%s'' '
         + ' and ( F_sRJHDQ <= right(''000000''+''%s'',6) and F_sRJHDZ >= right(''000000''+''%s'',6) '
         + ' or F_sRJHDQ <= right(''000000''+''%s'',6) and F_sRJHDZ >= right(''000000''+''%s'',6) ) '
         + ' and SubString(b.F_sCPBH,1,2)=''%s'''
-        + ' and a.F_iID <> %d)',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2),RJHD[i].m_iID]);
+        //+ ' and a.F_iID <> %d)',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2),RJHD[i].m_iID]);
+        + ' )',[RJHD[i].m_sZH,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDQ,RJHD[i].m_sRJHDZ,RJHD[i].m_sRJHDZ,Copy(RJHD[i].m_sCPBH,1,2)]);
     end;
     if Length(sSqlData) > 2000 then
     begin
       sSqlData := sSqlData + ' ) ';
+      if sIDs <> '' then
+      begin
+        sSqlData := sSqlData + ' and a.F_iID not in ('+sIDs+') ';
+      end;
       ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[]);
       if Assigned(ADO_Rec) and (ADO_Rec.RecordCount > 0) then
       begin
@@ -1425,6 +1439,10 @@ begin
   if sSqlData <> '' then
   begin
     sSqlData := sSqlData + ' ) ';
+    if sIDs <> '' then
+    begin
+      sSqlData := sSqlData + ' and a.F_iID not in ('+sIDs+') ';
+    end;
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[]);
     if Assigned(ADO_Rec) and (ADO_Rec.RecordCount > 0) then
     begin
@@ -1656,12 +1674,33 @@ begin
 
 end;
 
-function f_WriteOperationLog(_sOperation: string;_iFlag: Integer):Boolean;
+function f_WriteUserOperationLog(_sOperation: string;_iFlag: Integer):Boolean;
 var
   sSqlData: string;
 begin
   sSqlData := 'Insert into Log_UserOperationLog (F_sOperation,F_iFlag, F_dDate,F_iLoginID) values (''%s'',%d,getdate(),%d)';
   Result := DM_DataBase.ExecQuery(sSqlData,[_sOperation,_iFlag,LoginData.m_iLoginID],False);
+
+end;
+
+function f_WriteOrderOperationLog(AiType: Integer;AiOrderID: Integer;AtiOrderType: Integer;AsOperatorCode: string; AsContent: string):Boolean;
+var
+  sSqlData: string;
+begin
+
+//  if AdOperationTime = '' then
+//    AdOperationTime := FormatDateTime('yyyy-mm-dd hh:MM:ss',now);
+  sSqlData := 'INSERT INTO Log_OrderOperation (F_iType,F_iOrderID,F_tiOrderType,F_sOperatorCode,F_sContent) VALUES (%d,%d,%d,''%s'',''%s'') ';
+  Result := DM_DataBase.ExecQuery(sSqlData,[AiType,AiOrderID,AtiOrderType,AsOperatorCode,AsContent],False);
+
+end;
+
+function f_WriteOrderPicReviewLog(AiOrderID: Integer; AtiOrderType: Integer; AiTGZT: Integer; AiFKBZ: Integer): Boolean;
+var
+  sSqlData: string;
+begin
+  sSqlData := 'Insert into Log_OrderPicReview (F_iOrderID,F_tiOrderType,F_sCZRBM,F_sCZRQ,F_iTGZT,F_tiFKBZ) values (%d,%d,''%s'',getdate(),%d,%d)';
+  Result := DM_DataBase.ExecQuery(sSqlData,[AiOrderID,AtiOrderType,LoginData.m_sUserName,AiTGZT,AiFKBZ],False);
 
 end;
 
@@ -1689,18 +1728,18 @@ begin
     sFileName := sLocalPath;
     if not Assigned(m_Net) then
     begin
-      sDll := ExtractFilePath(Application.ExeName) + c_NetClientDLL;
+      sDll := ExtractFilePath(Application.ExeName) + g_NetClientDLL;
       if not FileExists(sDll) then Exit;
       m_Net := TFileClientDll.Create('',False,False);
       if not m_Net.p_IsActive then
-      if m_Net.p_LinkToServer('', vServicesIP, c_DownLoadPicPort,
+      if m_Net.p_LinkToServer('', vServicesIP, g_DownLoadPicPort,
         nil, nil, nil, nil, false) <> 0 then
       begin
         m_Net.p_Close;
         exit;
       end;
     end;
-    if m_Net.p_YDHK_SendWait('p_Erp_GetFileData', VarArrayOf([c_PicPath+sServerPath, '']), RData, False) then
+    if m_Net.p_YDHK_SendWait('p_Erp_GetFileData', VarArrayOf([g_PicPath+sServerPath, '']), RData, False) then
     begin
       if not VarIsNull(RData[1]) then
       begin
@@ -1713,11 +1752,11 @@ begin
       end;
     end;
   except
-    sDll := ExtractFilePath(Application.ExeName) + c_NetClientDLL;
+    sDll := ExtractFilePath(Application.ExeName) + g_NetClientDLL;
     if not FileExists(sDll) then Exit;
     m_Net := TFileClientDll.Create;
     if not m_Net.p_IsActive then
-    if m_Net.p_LinkToServer('', vServicesIP, c_DownLoadPicPort,
+    if m_Net.p_LinkToServer('', vServicesIP, g_DownLoadPicPort,
       nil, nil, nil, nil, false) <> 0 then
     begin
       m_Net.p_Close;
@@ -1870,9 +1909,9 @@ begin
   for i := 1 to PosNum(sZH,',') + 1 do
   begin
     Len := Length(LabelGroup);
+    b := False;
     for j := 0 to  Len -1 do
     begin
-      b := False;
       if LabelGroup[j].m_iOrderID = -1 then
       begin
         LabelGroup[j].m_sZH        := PosCopy(sZH,',',i);
@@ -1896,6 +1935,9 @@ begin
 end;
 
 end.
+
+
+
 
 
 

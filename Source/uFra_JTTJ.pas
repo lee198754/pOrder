@@ -22,13 +22,13 @@ type
     stg_jttj: Ti_StgEdit;
     rmr_JTTJ: TRMGridReport;
     rmdb_JTTJ: TRMDBDataSet;
-    ADO_JTTJ: TADOQuery;
     btn_export: TRzButton;
     procedure btn_dyClick(Sender: TObject);
     procedure btn_cxClick(Sender: TObject);
     procedure btn_exportClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_JTTJ: TADOQuery;
     procedure ReadJTTJ(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -113,17 +113,18 @@ end;
 
 procedure TFra_JTTJ.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb: integer;
 begin
   sCxq := FormatDateTime('yyyyMMdd',dtp_cxq.DateTime)+' 00:00:00';
   sCxz := FormatDateTime('yyyyMMdd',dtp_cxz.DateTime)+' 23:59:59';
   iCplb := FindProductCategoryID(cbb_cplb.ItemIndex);
-  //ADO_Rec := DM_DataBase.OpenQuery('Exec p_sctj ''%s'',''%s''',[sCxq,sCxz]);
-  ADO_JTTJ.Close;
-  ADO_JTTJ.SQL.Text := Format('Exec p_jttj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
-  ADO_JTTJ.Open;
+  if Assigned(ADO_JTTJ) then ADO_JTTJ.Free;
+  ADO_JTTJ := DM_DataBase.OpenQuery('Exec p_jttj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+  rmdb_JTTJ.DataSet := ADO_JTTJ;
+//  ADO_JTTJ.Close;
+//  ADO_JTTJ.SQL.Text := Format('Exec p_jttj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+//  ADO_JTTJ.Open;
   ReadJTTJ(ADO_JTTJ);
 end;
 

@@ -194,16 +194,18 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btn_bzClick(Sender: TObject);
     procedure btn_yzjgClick(Sender: TObject);
-
+    procedure lab_SbIDMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+  protected
+    procedure WndProc(var Message: TMessage); override;
   private
     { Private declarations }
-    vClose: Boolean;
+    //vClose: Boolean;
     ImgList: array of TImage;
     PicInfo: array of TPicInfo;
     MyThread: TMyDownLoad;
     procedure LoadPic;
     function f_MakeAllow: Boolean;   //操作允许
-    procedure WndProc(var Message: TMessage); override;
     procedure FileSaveTo(AsFileName: string);
     procedure SaveToClick(Sender: TObject);
     procedure ImgDblClick(Sender: TObject);
@@ -434,7 +436,7 @@ var
 begin
   Self.VertScrollBar.Position := 0;
 
-  vClose := False;
+  //vClose := False;
   Self.DoubleBuffered := True;
   edt_Temp.DoubleBuffered := True;
 
@@ -575,17 +577,20 @@ begin
     edt_Temp.Width := Ti_Label(Sender).Width
   else
     edt_Temp.Width := 150;
+
 end;
 
 
 procedure TMyDownLoad.idhtp_picWork(Sender: TObject; AWorkMode: TWorkMode;
   const AWorkCount: Integer);
 begin
-  if Self.FrmDZX.vClose then
-  begin
-    TIdHTTP(Sender).Disconnect;
-    Abort;
-  end;
+  //if Self.FrmDZX.vClose then
+//  if Terminated then
+//  begin
+//    TIdHTTP(Sender).Disconnect;
+//    TIdHTTP(Sender).Free;
+//    Abort;
+//  end;
   case AWorkMode of
     wmRead:;
     wmWrite:;
@@ -608,11 +613,13 @@ end;
 procedure TMyDownLoad.idhtp_picWorkBegin(Sender: TObject;
   AWorkMode: TWorkMode; const AWorkCountMax: Integer);
 begin
-  if Self.FrmDZX.vClose then
-  begin
-    TIdHTTP(Sender).Disconnect;
-    Abort;
-  end;
+  //if Self.FrmDZX.vClose then
+//  if Terminated then
+//  begin
+//    TIdHTTP(Sender).Disconnect;
+//    TIdHTTP(Sender).Free;
+//    Abort;
+//  end;
   g_iFileSize:=AWorkCountMax;
   Self.FrmDZX.LabProg[g_iCurrent].Caption := '0%';
 end;
@@ -620,11 +627,13 @@ end;
 procedure TMyDownLoad.idhtp_picWorkEnd(Sender: TObject;
   AWorkMode: TWorkMode);
 begin
-  if Self.FrmDZX.vClose then
-  begin
-    TIdHTTP(Sender).Disconnect;
-    Abort;
-  end;
+  //if Self.FrmDZX.vClose then
+//  if Terminated then
+//  begin
+//    TIdHTTP(Sender).Disconnect;
+//    TIdHTTP(Sender).Free;
+//    Abort;
+//  end;
   g_iFileSize := 0;
 end;
 
@@ -666,8 +675,12 @@ begin
       Len := Length(ImgList);
       for i := 0 to Len -1 do
       begin
-        if vClose then
+//        if vClose then
+        if Terminated then
+        begin
+          idhtp_pic.Disconnect;
           Break;
+        end;
         g_iCurrent := i;
         //sPicPath := ImgList[i].Hint;
         sPicPath := PicInfo[i].m_sPath;
@@ -691,7 +704,7 @@ begin
           sFileName :=  StrReplace(Copy(sPicPath,8,Length(sPicPath)),'/','\');
         end else
         begin
-          sFullPicPath := c_PicUrl+sPicPath;
+          sFullPicPath := g_PicUrl+sPicPath;
           sFileName :=  StrReplace(sPicPath,'/','\');
         end;
         PicInfo[i].m_sFileName := sTempPath+sFileName;
@@ -712,7 +725,7 @@ begin
 //             if not p_DownloadFile(sTempPath+sFileName,sFileName) then
 //             begin
 //               ms.Clear;
-//               idhtp_pic.Get(c_PicUrl+sPicPath,ms);
+//               idhtp_pic.Get(g_PicUrl+sPicPath,ms);
 //               ms.SaveToFile(sTempPath+sFileName);
 //             end;
 //            end;
@@ -769,8 +782,10 @@ begin
   FreeOnTerminate := True;
   DownLoadPic;
 
-  if Self.FrmDZX.vClose then
-    Synchronize(Self.FrmDZX.Free);  //切换到主线程执行窗口释放
+  if (Terminated) and Assigned(Self.FrmDZX) then
+    SendMessage(Self.FrmDZX.Handle,WM_FREE,0,0);
+//  if Self.FrmDZX.vClose then
+//    Synchronize(Self.FrmDZX.Free);  //切换到主线程执行窗口释放
   //  SendMessage(Self.FrmDZX.Handle,WM_FREE,0,0);   //发消息到主线程执行窗口释放
 end;
 
@@ -978,12 +993,14 @@ begin
   ExitCode := 0;
   if Assigned(MyThread) then
     GetExitCodeThread(MyThread.Handle, ExitCode);
+
   if ExitCode = STILL_ACTIVE then
   begin
     Action := caHide;
+    MyThread.Terminate;
   end else
     Action := caFree;
-  vClose := True;
+  //vClose := True;
 end;
 
 
@@ -1197,6 +1214,29 @@ begin
 
   if Assigned(ADO_Rec) then ADO_Rec.Free;
 end;
+
+procedure TFrm_DDMX_DZX.lab_SbIDMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  pt: TPoint;
+  lparm: Integer;
+begin
+  edt_Temp.Visible := True;
+  edt_Temp.Parent := Ti_Label(Sender).Parent;
+  edt_Temp.Text := Ti_Label(Sender).Caption;
+  edt_Temp.Left := Ti_Label(Sender).Left;
+  edt_Temp.Top := Ti_Label(Sender).Top;
+  edt_Temp.Height := Ti_Label(Sender).Height;
+  GetCursorPos(pt);
+  pt := edt_Temp.ScreenToClient(pt);
+  lparm := MAKELPARAM(pt.X,pt.Y);
+  edt_Temp.Perform(WM_LBUTTONDOWN,0,lparm);
+  if Ti_Label(Sender).Width > edt_Temp.Width then
+    edt_Temp.Width := Ti_Label(Sender).Width
+  else
+    edt_Temp.Width := 150;
+end;
+
 
 end.
 

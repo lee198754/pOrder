@@ -574,14 +574,14 @@ begin
                   iOut,sOutCode,sJiangCode,sOutWay,sOverDate,iOutNum,sTXM,IntToStr(iZXS),IntToStr(iCBSL),sBZ,iRec,False) then
               begin
                 try
-                  f_WriteOperationLog('[发货反馈]'+sCPBH+' 发货反馈第一次失败!',999);
+                  f_WriteUserOperationLog('[发货反馈]'+sCPBH+' 发货反馈第一次失败!',999);
                   f_FHFK(obj,iDfbbz,iOrderID,iOrderType,sCPBH,iType,IntToStr(iSBID),sProductCode,iTao,
                     iOut,sOutCode,sJiangCode,sOutWay,sOverDate,iOutNum,sTXM,IntToStr(iZXS),IntToStr(iCBSL),sBZ,iRec,True);
-                  f_WriteOperationLog('[发货反馈]'+sCPBH+' 发货反馈第二次成功!',999);
+                  f_WriteUserOperationLog('[发货反馈]'+sCPBH+' 发货反馈第二次成功!',999);
                 except
                   on E: Exception do
                   begin
-                    f_WriteOperationLog('[发货反馈]发货反馈连接出错:'+E.message,999);
+                    f_WriteUserOperationLog('[发货反馈]发货反馈连接出错:'+E.message,999);
                     p_MessageBoxDlg(PChar('连接出错:'+E.message));
                     Exit;
                   end;
@@ -589,7 +589,7 @@ begin
               end;
 //原发货反馈国网接口调用,发现反馈第一次出错,第二次成功,所以进行封装f_FHFK,反馈出错再进行反馈 (封装成 f_FHFK)
 {              try
-                iRec := obj.setOutInfo(c_Web_UserName, c_Web_UserPwd,iType,IntToStr(iSBID),sProductCode,iTao,
+                iRec := obj.setOutInfo(g_Web_UserName, g_Web_UserPwd,iType,IntToStr(iSBID),sProductCode,iTao,
                   iOut,sOutCode,sJiangCode,sOutWay,sOverDate,iOutNum,sTXM,IntToStr(iZXS),IntToStr(iCBSL),sBZ);
                 //如果出现图稿未合格
                 if iRec= 41 then
@@ -603,9 +603,9 @@ begin
                   ADO_Temp := DM_DataBase.OpenQuery(sSqlData,[iOrderID]);
                   if Assigned(ADO_Temp) and (ADO_Temp.RecordCount > 0) then
                   begin
-                    if obj.setProductInfo('wsfj1', '000000',iif(iDfbbz=0,iOrderType,3),IntToStr(iSBID),sCPBH,3) = 0 then
+                    if obj.setProductInfo(g_Web_UserName, g_Web_UserPwd,iif(iDfbbz=0,iOrderType,3),IntToStr(iSBID),sCPBH,3) = 0 then
                     begin
-                      iRec := obj.setOutInfo(c_Web_UserName, c_Web_UserPwd,iType,IntToStr(iSBID),sProductCode,iTao,
+                      iRec := obj.setOutInfo(g_Web_UserName, g_Web_UserPwd,iType,IntToStr(iSBID),sProductCode,iTao,
                         iOut,sOutCode,sJiangCode,sOutWay,sOverDate,iOutNum,sTXM,IntToStr(iZXS),IntToStr(iCBSL),sBZ);
                     end;
                     ADO_Temp.Free;
@@ -1505,7 +1505,7 @@ begin
         iType := DM_DataBase.ADO_FHFK.FieldByName('OrderType').AsInteger
       else
         iType := 1;
-      iRec := obj.setCXFH(c_Web_UserName, c_Web_UserPwd,iType,IntToStr(iSBID));
+      iRec := obj.setCXFH(g_Web_UserName, g_Web_UserPwd,iType,IntToStr(iSBID));
       if iRec = 0 then
       begin
         sSBID := sSBID + ',' + IntToStr(iSBID);
@@ -1764,12 +1764,12 @@ var
 begin
   Result := False;
   try
-    iRec := obj.setOutInfo(c_Web_UserName, c_Web_UserPwd,Type_,ID,ProductCode,Tao,
+    iRec := obj.setOutInfo(g_Web_UserName, g_Web_UserPwd,Type_,ID,ProductCode,Tao,
       Out_,OutCode,JiangCode,OutWay,OverDate,OutNum,TXM,ZXS,CBSL,BZ);
     //如果出现图稿未合格
     if iRec= 41 then
     begin
-      f_WriteOperationLog('[发货反馈]出现图稿未合格订单 '+CPBH,999);
+      f_WriteUserOperationLog('[发货反馈]出现图稿未合格订单 '+CPBH,999);
       case OrderType of
         0: sSqlData :='select 1 from BI_CustomOrderDetails where F_iFktgzt=3 and F_iID=%d';
         1: sSqlData :='select 1 from BI_SellOrderDetails where F_iFktgzt=3 and F_iID=%d';
@@ -1779,10 +1779,10 @@ begin
       ADO_Temp := DM_DataBase.OpenQuery(sSqlData,[OrderID]);
       if Assigned(ADO_Temp) and (ADO_Temp.RecordCount > 0) then
       begin
-        f_WriteOperationLog('[发货反馈]'+CPBH+' 反馈图稿合格',999);
-        if obj.setProductInfo('wsfj1', '000000',iif(Dfbbz=0,OrderType,3),ID,CPBH,3) = 0 then
+        f_WriteUserOperationLog('[发货反馈]'+CPBH+' 反馈图稿合格',999);
+        if obj.setProductInfo(g_Web_UserName, g_Web_UserPwd,iif(Dfbbz=0,OrderType,3),ID,CPBH,3) = 0 then
         begin
-          iRec := obj.setOutInfo(c_Web_UserName, c_Web_UserPwd,Type_,ID,ProductCode,Tao,
+          iRec := obj.setOutInfo(g_Web_UserName, g_Web_UserPwd,Type_,ID,ProductCode,Tao,
             Out_,OutCode,JiangCode,OutWay,OverDate,OutNum,TXM,ZXS,CBSL,BZ);
         end;
         ADO_Temp.Free;
@@ -1840,6 +1840,8 @@ begin
 end;
 
 end.
+
+
 
 
 

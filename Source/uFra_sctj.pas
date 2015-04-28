@@ -119,13 +119,13 @@ type
     btn_dy: TButton;
     rmr_SCTJ: TRMGridReport;
     rmdb_SCTJ: TRMDBDataSet;
-    ADO_SCTJ: TADOQuery;
     cbb_cplb: Ti_ComboBox;
     Label2: TLabel;
     procedure btn_cxClick(Sender: TObject);
     procedure btn_dyClick(Sender: TObject);
   private
     { Private declarations }
+    ADO_SCTJ: TADOQuery;
     procedure ReadSCTJ(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -140,17 +140,18 @@ uses
 
 procedure TFra_sctj.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb: integer;
 begin
   sCxq := FormatDateTime('yyyyMMdd',dtp_cxq.DateTime)+' 00:00:00';
   sCxz := FormatDateTime('yyyyMMdd',dtp_cxz.DateTime)+' 23:59:59';
   iCplb := FindProductCategoryID(cbb_cplb.ItemIndex);
-  //ADO_Rec := DM_DataBase.OpenQuery('Exec p_sctj ''%s'',''%s''',[sCxq,sCxz]);
-  ADO_SCTJ.Close;
-  ADO_SCTJ.SQL.Text := Format('Exec p_sctj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
-  ADO_SCTJ.Open;
+  if Assigned(ADO_SCTJ) then ADO_SCTJ.Free;
+  ADO_SCTJ := DM_DataBase.OpenQuery('Exec p_sctj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+  rmdb_SCTJ.DataSet := ADO_SCTJ;
+//  ADO_SCTJ.Close;
+//  ADO_SCTJ.SQL.Text := Format('Exec p_sctj ''%s'',''%s'',%d',[sCxq,sCxz,iCplb]);
+//  ADO_SCTJ.Open;
   ReadSCTJ(ADO_SCTJ);
 //  ADO_Rec.Free;
 end;

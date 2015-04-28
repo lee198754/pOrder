@@ -71,6 +71,7 @@ object Fra_DataArchiving: TFra_DataArchiving
       Height = 25
       Caption = 'Button1'
       TabOrder = 4
+      Visible = False
       OnClick = Button1Click
     end
   end

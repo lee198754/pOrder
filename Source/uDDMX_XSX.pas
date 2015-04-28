@@ -71,6 +71,8 @@ type
     procedure i_Label13Click(Sender: TObject);
     procedure btn_bzClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure lab_SbIDMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
   public
@@ -180,6 +182,29 @@ procedure TFrm_DDMX_XSX.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Action := cafree;
+end;
+
+procedure TFrm_DDMX_XSX.lab_SbIDMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  pt: TPoint;
+  lparm: Integer;
+begin
+  edt_Temp.Visible := True;
+  edt_Temp.Parent := Ti_Label(Sender).Parent;
+  edt_Temp.Text := Ti_Label(Sender).Caption;
+  edt_Temp.Left := Ti_Label(Sender).Left;
+  edt_Temp.Top := Ti_Label(Sender).Top;
+  edt_Temp.Height := Ti_Label(Sender).Height;
+  GetCursorPos(pt);
+  pt := edt_Temp.ScreenToClient(pt);
+  lparm := MAKELPARAM(pt.x,pt.Y);
+  edt_Temp.Perform(WM_LBUTTONDOWN,0,lparm);
+  edt_Temp.Perform(WM_LBUTTONUP,0,lparm);
+  if Ti_Label(Sender).Width > edt_Temp.Width then
+    edt_Temp.Width := Ti_Label(Sender).Width
+  else
+    edt_Temp.Width := 150;
 end;
 
 end.

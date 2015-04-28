@@ -35,7 +35,7 @@ implementation
 
 {$R *.dfm}
 uses
-  uPub_Type, uPub_Func, IniFiles, PubStr, Registry, uPub_Text,UnitAutoComplete;
+  uPub_Type, uPub_Func, IniFiles, PubStr, Registry, uPub_Text;
 
 
 

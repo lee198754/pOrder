@@ -84,6 +84,7 @@ type
     m_iType: Integer;
 //    m_iClassCode: Integer;
     m_iGroupID: integer;
+//    m_bUpdateStatus: Boolean;  //是否更新生产状态
   end;
 
   TCartonLableGroup = record

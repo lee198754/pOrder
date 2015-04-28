@@ -166,6 +166,7 @@ type
     vGroupID: Integer;
     vbCXBZ: Boolean;     //撤销标志(False: 未撤销;True: 已撤销)
     vbHistory: Boolean;  //历史工单
+    FUpdateStatusList: TStrings;  //需要更新的订单生产状态序号
     function p_LoadWorkOrderData: Boolean;    //读取工单数据到数组中
     function p_LoadHistoryWorkOrderData: Boolean;    //读取历史工单数据到数组中
     procedure p_GetZDGY;             //获取装订工艺
@@ -194,6 +195,7 @@ begin
   Frm_OrderList := TFrm_OrderList.Create(Self);
   Frm_OrderList.vGroup := ADO_WorkOrder.RecNo;
   Frm_OrderList.vActionType := Self.vActionType;
+  Frm_OrderList.FOrderType := OrderData[0].m_iType;
   if Frm_OrderList.ShowModal = mrok then
   begin
     str := '';
@@ -202,9 +204,21 @@ begin
       if OrderData[i].m_iGroupID = ADO_WorkOrder.RecNo then
         str := str + OrderData[i].m_sCPBH + '; ';
     end;
+    if Assigned(Frm_OrderList.FUpdateStatusApartIDList) then
+    begin
+      if not Assigned(FUpdateStatusList) then
+        FUpdateStatusList := TStringList.Create;
+      for i := 0 to Frm_OrderList.FUpdateStatusApartIDList.Count -1 do
+      begin
+        if FUpdateStatusList.IndexOf(Frm_OrderList.FUpdateStatusApartIDList.Strings[i]) = -1 then
+          FUpdateStatusList.Add(Frm_OrderList.FUpdateStatusApartIDList.Strings[i]);
+      end;
+      Frm_OrderList.FUpdateStatusApartIDList.Free;
+    end;
     ADO_WorkOrder.Edit;
     ADO_WorkOrder.FieldByName('Orders').AsString := str;
     ADO_WorkOrder.Post;
+
   end;
 
   Frm_OrderList.Free;
@@ -484,7 +498,11 @@ begin
     Exit;
   end;
   //------------------存储过程检验-------------------
-  sSqlData := 'Select b.F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d';
+  if OrderData[0].m_iType in [0,1] then
+    sSqlData := 'Select b.F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d'
+  else if OrderData[0].m_iType = 2 then
+    sSqlData := 'Select b.BillID F_iProductTypeID from DO_OrderApart a,Sys_BillNO b where CHARINDEX(b.NoType,a.F_sYztmc)=1 and a.F_iID=%d';
+
   ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
   iProductTypeID := ADO_Rec.FieldByName('F_iProductTypeID').AsInteger;
   ADO_Rec.Free;
@@ -493,7 +511,13 @@ begin
       +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
   else if OrderData[0].m_iType = 1 then
     sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c '
-      +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+      +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
+  else if OrderData[0].m_iType = 2 then
+  begin
+    sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SaleOrderDetails b,Set_ProductCategory c '
+      +' where a.F_iOrderID = b.F_iOrderID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+    sSqlData := 'Select F_iID=8 ,ApartID=%d';
+  end;
   ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
   iProductCategoryID := ADO_Rec.FieldByName('F_iID').AsInteger;
   sSqlData := 'exec p_Check_WorkOrder_ZD ''%s'',%d,%d';
@@ -714,7 +738,7 @@ var
   ADO_Rec: TADOQuery;
   ADO_CL, ADO_YSDH, ADO_ZB, ADO_Order, ADO_ZBGX, ADO_BST, ADO_BSTPrint, ADO_RJHD: TADOQuery;
   sPrefixCode,sNFGBRQ,sPrefixStyle: string;
-  sDate, sYear, sMonth, sDay: string;
+  sDate, sYear, sMonth, sDay, sSeriesNo: string;
   iMatlID, iXM, iOutSL, iSign: Integer;
   sPCH, sBM, sCZRBM: string;
   bXPL: Boolean;
@@ -725,17 +749,36 @@ begin
     DM_DataBase.Con_YDPrint.BeginTrans;
     //------生成工单号------------------------------------
     if OrderData[0].m_iType = 0 then
-      sSqlData :=  'Select e.F_sPrefixCode,e.F_sSmallPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle,e.F_sSmallPrefixStyle '
-        +' from DO_OrderApart a,BI_CustomOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
-        +' where a.F_iOrderID=b.F_iID and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
-        +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d and a.F_tiCXBZ = 0 '
+    begin
+//      sSqlData :=  'Select e.F_sPrefixCode,e.F_sSmallPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle,e.F_sSmallPrefixStyle '
+//        +' from DO_OrderApart a,BI_CustomOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
+//        +' where a.F_iOrderID=b.F_iID and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
+//        +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d and a.F_tiCXBZ = 0 ';
+      sSqlData :=  'SELECT d.F_sPrefixCode,d.F_sSmallPrefixCode,d.F_sNFGBRQ,d.F_sPrefixStyle,d.F_sSmallPrefixStyle '
+        +' FROM DO_OrderApart  a,dbo.BI_CustomOrderDetails b,Set_PostageType c,Set_ProductType d '
+        +' WHERE c.F_iProductTypeID=d.F_iID AND a.F_iOrderID=b.F_iID AND c.F_iID=dbo.f_GetpostageID(b.F_sCpbh,a.F_sYztmc) AND a.F_iID=%d and a.F_tiCXBZ = 0 '
+    end
     else if OrderData[0].m_iType = 1 then
-      sSqlData := 'Select e.F_sPrefixCode,e.F_sSmallPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle,e.F_sSmallPrefixStyle '
-        +' from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
-        +' where a.F_iOrderID=b.F_iID and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
-        +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d and a.F_tiCXBZ = 0 ';
+    begin
+//      sSqlData := 'Select e.F_sPrefixCode,e.F_sSmallPrefixCode,e.F_sNFGBRQ,e.F_sPrefixStyle,e.F_sSmallPrefixStyle '
+//        +' from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c,Set_PostageType d,Set_ProductType e   '
+//        +' where a.F_iOrderID=b.F_iID and a.F_sYZTMC like ''%%''+d.F_sYZTMC+''%%'' and b.F_iProductType=c.F_iClassCode '
+//        +' and c.F_iID = e.F_iProductCategoryID and d.F_iProductTypeID=e.F_iID and a.F_iID=%d and a.F_tiCXBZ = 0 ';
+      sSqlData :=  'SELECT d.F_sPrefixCode,d.F_sSmallPrefixCode,d.F_sNFGBRQ,d.F_sPrefixStyle,d.F_sSmallPrefixStyle '
+        +' FROM DO_OrderApart  a,dbo.BI_SellOrderDetails b,Set_PostageType c,Set_ProductType d '
+        +' WHERE c.F_iProductTypeID=d.F_iID AND a.F_iOrderID=b.F_iID AND c.F_iID=dbo.f_GetpostageID(b.F_sCpbh,a.F_sYztmc) AND a.F_iID=%d and a.F_tiCXBZ = 0 '
+    end
+    else if OrderData[0].m_iType = 2 then
+    begin
+      sSqlData := 'Select d.NoPrefix,d.TheYear,d.TheMonth,d.TheDay,d.SeriesNo '
+        +' from DO_OrderApart a,DO_SaleOrderDetail b,DO_SaleOrder c,Sys_BillNO d  '
+        +' where a.F_iOrderID=b.F_iOrderID and b.F_sSysCode=c.F_sSysCode and a.F_iID=%d and c.F_sSalesType=d.NoType '
+        +' and c.F_bClose = 0 ';
+      //sSqlData := 'select ''DC'' F_sPrefixCode from DO_OrderApart where a.F_iID=%d ';
+    end;
 
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],False);
+
     if ADO_Rec = nil then
     begin
       Exit;
@@ -743,63 +786,118 @@ begin
     sPrefixCode := '';
     if ADO_Rec.RecordCount > 0 then
     begin
-      if not bXPL then
+      if  OrderData[0].m_iType in [0,1] then
       begin
-        sPrefixCode := Trim(ADO_Rec.FieldByName('F_sPrefixCode').AsString);
-        sPrefixStyle := Trim(ADO_Rec.FieldByName('F_sPrefixStyle').AsString);
-      end else
-      begin
-        sPrefixCode := Trim(ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString);
-        sPrefixStyle := Trim(ADO_Rec.FieldByName('F_sSmallPrefixStyle').AsString);
-      end;
-      sNFGBRQ := ADO_Rec.FieldByName('F_sNFGBRQ').AsString;
-      sYear := Copy(sNFGBRQ,1,Pos('年',sNFGBRQ)+1);
-      sMonth := Copy(sNFGBRQ,Pos('年',sNFGBRQ)+2,Pos('月',sNFGBRQ)-1-length(sYear));
-      sDay := Copy(sNFGBRQ,Pos('月',sNFGBRQ)+2,Pos('日',sNFGBRQ)-1-Pos('月',sNFGBRQ)-1);
-      sDate := sMonth+sDay;
-      if FormatDateTime('MMdd',Now) >= sDate then
-      begin
-        if sYear = c_CPLB_NextYear then
-          sYear := FormatDateTime('yy',Now)
-        else if sYear= c_CPLB_ThisYear then
-          sYear := FormatDateTime('yy',IncYear(Now));
-        sPrefixCode := StrReplace(sPrefixStyle,'year',sYear);
-
-        if (not bXPL) and (ADO_Rec.FieldByName('F_sPrefixCode').AsString <> sPrefixCode) then
+        if not bXPL then
         begin
-          ADO_Rec.Edit;
-          ADO_Rec.FieldByName('F_sPrefixCode').AsString := sPrefixCode;
-          ADO_Rec.Post;
+          sPrefixCode := Trim(ADO_Rec.FieldByName('F_sPrefixCode').AsString);
+          sPrefixStyle := Trim(ADO_Rec.FieldByName('F_sPrefixStyle').AsString);
         end else
-        if (bXPL) and (ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString <> sPrefixCode) then
+        begin
+          sPrefixCode := Trim(ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString);
+          sPrefixStyle := Trim(ADO_Rec.FieldByName('F_sSmallPrefixStyle').AsString);
+        end;
+        sNFGBRQ := ADO_Rec.FieldByName('F_sNFGBRQ').AsString;
+        sYear := Copy(sNFGBRQ,1,Pos('年',sNFGBRQ)+1);
+        sMonth := Copy(sNFGBRQ,Pos('年',sNFGBRQ)+2,Pos('月',sNFGBRQ)-1-length(sYear));
+        sDay := Copy(sNFGBRQ,Pos('月',sNFGBRQ)+2,Pos('日',sNFGBRQ)-1-Pos('月',sNFGBRQ)-1);
+        sDate := sMonth+sDay;
+        if FormatDateTime('MMdd',Now) >= sDate then
+        begin
+          if sYear = c_CPLB_NextYear then
+            sYear := FormatDateTime('yy',Now)
+          else if sYear= c_CPLB_ThisYear then
+            sYear := FormatDateTime('yy',IncYear(Now));
+          sPrefixCode := StrReplace(sPrefixStyle,'year',sYear);
+          if sPrefixCode = '' then
+          begin
+            p_MessageBoxDlg('请先设置工单号前缀!');
+            Exit;
+          end;
+
+          if (not bXPL) and (ADO_Rec.FieldByName('F_sPrefixCode').AsString <> sPrefixCode) then
+          begin
+            ADO_Rec.Edit;
+            ADO_Rec.FieldByName('F_sPrefixCode').AsString := sPrefixCode;
+            ADO_Rec.Post;
+          end else
+          if (bXPL) and (ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString <> sPrefixCode) then
+          begin
+            ADO_Rec.Edit;
+            ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString := sPrefixCode;
+            ADO_Rec.Post;
+          end;
+        end;
+        if StrRight(sPrefixCode,1) <> '-' then
+          sPrefixCode := sPrefixCode + '-' + FormatDateTime('yyyyMM',now);
+        DM_DataBase.GetMaxID('DO_WorkOrder',sPrefixCode,sGDH);
+        sGDH := sPrefixCode+StrRight(sGDH,4);
+        //DM_DataBase.GetMaxID('BI_WorkOrder','BK_GDH',sGDH);
+        //sGDH := 'CP-12BK-'+StrRight(sGDH,6);
+        edt_gdh.Text := sGDH;
+      end else
+      if OrderData[0].m_iType = 2 then
+      begin
+        sYear := ''; sMonth := ''; sDay := '';
+        sPrefixCode := Trim(ADO_Rec.FieldByName('NoPrefix').AsString);
+        if not ADO_Rec.FieldByName('TheYear').IsNull then
+        begin
+          sYear := ADO_Rec.FieldByName('TheYear').AsString;
+          if StrToNum(sYear) < YearOf(Now) then
+          begin
+            sYear :=  IntToStr(YearOf(Now));
+            ADO_Rec.Edit;
+            ADO_Rec.FieldByName('TheYear').AsInteger := YearOf(Now);
+            ADO_Rec.Post;
+          end;
+        end;
+        if not ADO_Rec.FieldByName('TheMonth').IsNull then
+        begin
+          sMonth := ADO_Rec.FieldByName('TheMonth').AsString;
+          if StrToNum(sMonth) < MonthOf(Now) then
+          begin
+            sMonth :=  IntToStr(MonthOf(Now));
+            ADO_Rec.Edit;
+            ADO_Rec.FieldByName('TheMonth').AsInteger := MonthOf(Now);
+            ADO_Rec.Post;
+          end;
+        end;
+        if not ADO_Rec.FieldByName('TheDay').IsNull then
+        begin
+          sDay := ADO_Rec.FieldByName('TheDay').AsString;
+          if StrToNum(sDay) < DayOf(Now) then
+          begin
+            sDay :=  IntToStr(DayOf(Now));
+            ADO_Rec.Edit;
+            ADO_Rec.FieldByName('TheDay').AsInteger := DayOf(Now);
+            ADO_Rec.Post;
+          end;
+        end;
+        sSeriesNo := ADO_Rec.FieldByName('SeriesNo').AsString;
+        if sSeriesNo<>'' then
         begin
           ADO_Rec.Edit;
-          ADO_Rec.FieldByName('F_sSmallPrefixCode').AsString := sPrefixCode;
+          ADO_Rec.FieldByName('SeriesNo').AsInteger := ADO_Rec.FieldByName('SeriesNo').AsInteger+1;
           ADO_Rec.Post;
         end;
+        sGDH := sPrefixCode + sYear + sMonth + sDay+sSeriesNo;
+        edt_gdh.Text := sGDH;
       end;
     end else
     begin
       p_MessageBoxDlg('错误：获取不到工单号,请设置邮资图的产品类型!!!');
+      ADO_Rec.Free;
       Exit;
     end;
     ADO_Rec.Free;
-    if sPrefixCode = '' then
-    begin
-      p_MessageBoxDlg('请先设置工单号前缀!');
-      Exit;
-    end;
-    if StrRight(sPrefixCode,1) <> '-' then
-      sPrefixCode := sPrefixCode + '-' + FormatDateTime('yyyyMM',now);
-    DM_DataBase.GetMaxID('DO_WorkOrder',sPrefixCode,sGDH);
-    sGDH := sPrefixCode+StrRight(sGDH,4);
-    //DM_DataBase.GetMaxID('BI_WorkOrder','BK_GDH',sGDH);
-    //sGDH := 'CP-12BK-'+StrRight(sGDH,6);
-    edt_gdh.Text := sGDH;
     //---------------------------------------
 
 
-    sSqlData := 'Select b.F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d';
+    if OrderData[0].m_iType in [0,1] then
+      sSqlData := 'Select b.F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d'
+    else if OrderData[0].m_iType = 2 then
+      sSqlData := 'Select d.BillID F_iProductTypeID from DO_OrderApart a,DO_SaleOrderDetail b,DO_SaleOrder c,Sys_BillNO d '
+        +' where a.F_iOrderID = b.F_iOrderID and b.F_sSysCode=c.F_sSysCode and c.F_sSalesType=d.NoType and a.F_iID=%d';
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
     iProductTypeID := ADO_Rec.FieldByName('F_iProductTypeID').AsInteger;
     ADO_Rec.Free;
@@ -808,7 +906,13 @@ begin
         +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
     else if OrderData[0].m_iType = 1 then
       sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c '
-        +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+        +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
+    else if OrderData[0].m_iType = 2 then
+    begin
+      sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SaleOrderDetails b,Set_ProductCategory c '
+        +' where a.F_iOrderID = b.F_iOrderID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+      sSqlData := 'Select F_iID=8 ,ApartID=%d';
+    end;
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
     iProductCategoryID := ADO_Rec.FieldByName('F_iID').AsInteger;
     ADO_Rec.Free;
@@ -862,6 +966,7 @@ begin
     ADO_Rec.FieldByName('F_iProductTypeID').AsInteger := iProductTypeID;
     ADO_Rec.FieldByName('F_iProductCategoryID').AsInteger := iProductCategoryID;
     ADO_Rec.FieldByName('F_tiXpl').AsInteger := iXpl;
+    ADO_Rec.FieldByName('F_sZl').AsString := OrderData[0].m_sYztmc;
     ADO_Rec.Post;
     vWorkID := ADO_Rec.FieldByName('F_iID').AsInteger;
     sSqlData := 'select * from DO_WorkOrderDetails where 1=2';
@@ -1744,7 +1849,11 @@ begin
   DM_DataBase.Con_YDPrint.BeginTrans;
   try
     if not p_History_AddWorkOrder then Exit;
-    sSqlData := 'Select F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d';
+    if OrderData[0].m_iType in [0,1] then
+      sSqlData := 'Select F_iProductTypeID from DO_OrderApart a,Set_PostageType b where CHARINDEX(b.F_sYZTMC,a.F_sYztmc)=1 and a.F_iID=%d'
+    else if OrderData[0].m_iType = 2 then
+      sSqlData := 'Select d.BillID F_iProductTypeID from DO_OrderApart a,DO_SaleOrderDetail b,DO_SaleOrder c,Sys_BillNO d '
+        +' where a.F_iOrderID = b.F_iOrderID and b.F_sSysCode=c.F_sSysCode and c.F_sSalesType=d.NoType and a.F_iID=%d';
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
     iProductTypeID := ADO_Rec.FieldByName('F_iProductTypeID').AsInteger;
     ADO_Rec.Free;
@@ -1753,7 +1862,13 @@ begin
         +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
     else if OrderData[0].m_iType = 1 then
       sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SellOrderDetails b,Set_ProductCategory c '
-        +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+        +' where a.F_iOrderID = b.F_iID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d'
+    else if OrderData[0].m_iType = 2 then
+    begin
+      sSqlData := 'Select c.F_iID from DO_OrderApart a,BI_SaleOrderDetails b,Set_ProductCategory c '
+        +' where a.F_iOrderID = b.F_iOrderID and b.F_iProductType=c.F_iClassCode and a.F_iID=%d';
+      sSqlData := 'Select F_iID=8 ,ApartID=%d';
+    end;
     ADO_Rec := DM_DataBase.OpenQuery(sSqlData,[OrderData[0].m_iApartID],True);
     iProductCategoryID := ADO_Rec.FieldByName('F_iID').AsInteger;
     ADO_Rec.Free;
@@ -1948,6 +2063,21 @@ begin
             FieldByName('F_sRJHDZ').AsString := OrderData[n].m_sRJHDZ;
             FieldByName('F_iGroupID').AsInteger := iGropuID;
             FieldByName('F_iWorkID').AsInteger := vWorkID;
+            if Assigned(FUpdateStatusList) and (FUpdateStatusList.IndexOf(IntToStr(OrderData[n].m_iApartID)) >= 0) then
+            begin
+              while not ADO_YSDH.Eof do
+              begin
+                if ADO_YSDH.FieldByName('F_iGroupID').AsInteger = iGropuID then
+                begin
+                  FieldByName('F_iSCZT').AsInteger := ADO_YSDH.FieldByName('F_iSCZT').AsInteger;
+                  FieldByName('F_iCzrID').AsInteger := ADO_YSDH.FieldByName('F_iCzrID').AsInteger;
+                  FieldByName('F_dCzrq').AsDateTime := ADO_YSDH.FieldByName('F_dCzrq').AsDateTime;
+                end;
+                ADO_YSDH.Next;
+              end;
+              ADO_YSDH.First;
+
+            end;
             Post;
             iDetailsID := FieldByName('F_iID').AsInteger;
             //存入兑奖号段
@@ -2250,6 +2380,7 @@ begin
     on E: Exception do
     begin
       DM_DataBase.Con_YDPrint.RollbackTrans;
+      f_WriteUserOperationLog('工单号:'+edt_gdh.Text+'兑奖号码更新失败!',999);
       p_MessageBoxDlg('更新兑奖号码失败：'+e.Message);
     end;
 
@@ -3919,12 +4050,12 @@ begin
       end;
       //添加数据
       First;
-      sCPBH := '';
       for i := 0 to iMax -1 do
       begin
+        sCPBH := '';
         for j := 0 to Length(OrderData) -1 do
         begin
-          if OrderData[j].m_iGroupID = ADO_WorkOrder.RecNo then
+          if OrderData[j].m_iGroupID = i+1 then
           begin
             sCPBH := sCPBH + OrderData[j].m_sCPBH + '; ';
           end;
@@ -4275,6 +4406,7 @@ var
   len: integer;
 begin
   str := Ti_TxtFilter(Sender).Text;
+  if str = '' then Exit;
   if (Ti_TxtFilter(Sender).Name = 'edt_qshm') or (Ti_TxtFilter(Sender).Name = 'edt_zzhm') then
   begin
     if not IsNum(Ti_TxtFilter(Sender).Text) then

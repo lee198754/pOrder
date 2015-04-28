@@ -32,7 +32,7 @@ uses
   uFrakd in 'Source\uFrakd.pas' {Fra_kd: TFrame},
   uFraParamSet in 'Source\uFraParamSet.pas' {Fra_ParamSet: TFrame},
   uFrascgl in 'Source\uFrascgl.pas' {Fra_scgl: TFrame},
-  uFratg in 'Source\uFratg.pas' {Fra_tg: TFrame},
+  uFratg in 'Source\TGSH\uFratg.pas' {Fra_tg: TFrame},
   uFraUserAdd in 'Source\uFraUserAdd.pas' {Fra_UserAdd: TFrame},
   uFraWorkerManage in 'Source\uFraWorkerManage.pas' {Fra_WorkerManage: TFrame},
   uFraYZTGL in 'Source\uFraYZTGL.pas' {Fra_yztgl: TFrame},
@@ -116,7 +116,13 @@ uses
   U_FileMd5 in 'Source\U_FileMd5.pas',
   uFrm_TSGYGL in 'Source\uFrm_TSGYGL.pas' {Frm_TSGYGL},
   uFrm_TSGYGL_Dlg in 'Source\uFrm_TSGYGL_Dlg.pas' {Frm_TSGYGL_Dlg},
-  uBaseForm in 'Source\uBaseForm.pas';
+  uBaseForm in 'Source\uBaseForm.pas',
+  uXQBQInfoFrm in 'Source\uXQBQInfoFrm.pas' {Frm_XQBQInfo},
+  uCDFPSKAPI in 'Source\uCDFPSKAPI.pas',
+  uYCXDDQDFrm in 'Source\YCXDDQD\uYCXDDQDFrm.pas' {Frm_YCXDDQD},
+  uOrderRecoveryFrm in 'Source\YCXDDQD\uOrderRecoveryFrm.pas' {Frm_OrderRecovery},
+  uDLLAPI in 'DLL\uDLLAPI.pas',
+  uTGCYDlgFrm in 'Source\TGSH\uTGCYDlgFrm.pas' {TGCYDlgFrm};
 
 {$R *.res}
 

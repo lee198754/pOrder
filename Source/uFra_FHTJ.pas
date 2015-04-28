@@ -29,7 +29,6 @@ type
     lab_fhms: TLabel;
     rmr_FHTJ: TRMGridReport;
     rmdb_FHTJ: TRMDBDataSet;
-    ADO_FHTJ: TADOQuery;
     GroupBox1: TGroupBox;
     Shape4: TShape;
     lab_yrlysdh: TLabel;
@@ -41,6 +40,7 @@ type
   private
     { Private declarations }
     vPlaceCode: string;
+    ADO_FHTJ: TADOQuery;
     procedure ReadFHTJ(ADO_Rec: TADOQuery);
   public
     { Public declarations }
@@ -52,7 +52,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uPub_Func, uPub_Type, uPub_Text;
+  uPub_Func, uPub_Type, uPub_Text, uDM_DataBase;
 
 { TFra_FHGJ }
 
@@ -105,7 +105,6 @@ end;
 
 procedure TFra_FHTJ.btn_cxClick(Sender: TObject);
 var
-  ADO_Rec: TADOQuery;
   sCxq,sCxz: string;
   iCplb, iXPL: integer;
 begin
@@ -117,11 +116,12 @@ begin
     1: iXPL := 0;
     2: iXPL := 1;
   end;
-
- // ADO_Rec := DM_DataBase.OpenQuery('Exec p_ywtj ''%s'',''%s''',[sCxq,sCxz]);
-  ADO_FHTJ.Close;
-  ADO_FHTJ.SQL.Text := Format('Exec p_fhtj ''%s'',''%s'',%d,''%s'',%d ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
-  ADO_FHTJ.Open;
+  if Assigned(ADO_FHTJ) then ADO_FHTJ.Free;
+  ADO_FHTJ := DM_DataBase.OpenQuery('Exec p_fhtj ''%s'',''%s'',%d,''%s'',%d ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
+  rmdb_FHTJ.DataSet := ADO_FHTJ;
+//  ADO_FHTJ.Close;
+//  ADO_FHTJ.SQL.Text := Format('Exec p_fhtj ''%s'',''%s'',%d,''%s'',%d ',[sCxq,sCxz,iCplb,vPlaceCode,iXPL]);
+//  ADO_FHTJ.Open;
   ReadFHTJ(ADO_FHTJ);
  // ADO_Rec.Free;
 

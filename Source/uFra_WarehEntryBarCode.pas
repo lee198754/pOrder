@@ -5,10 +5,10 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, StdCtrls, Grids, iGrid, RzButton, RzPanel, ButtonEdit, ExtCtrls,
-  ADODB;
+  ADODB,uBaseForm;
 
 type
-  TFra_WarehEntryBarCode = class(TFrame)
+  TFra_WarehEntryBarCode = class(TFrmFrame)
     RzGroupBox2: TRzGroupBox;
     RzPanel1: TRzPanel;
     RzBitBtn1: TRzBitBtn;

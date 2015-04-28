@@ -1,6 +1,6 @@
 object Frm_OrderList: TFrm_OrderList
-  Left = 310
-  Top = 142
+  Left = 75
+  Top = 86
   Width = 1180
   Height = 528
   Caption = #35746#21333#20449#24687
@@ -210,6 +210,15 @@ object Frm_OrderList: TFrm_OrderList
       Caption = 'cb_Temp'
       TabOrder = 3
     end
+  end
+  object btn_ddtj: TButton
+    Left = 95
+    Top = 408
+    Width = 75
+    Height = 25
+    Caption = #35746#21333#28155#21152
+    TabOrder = 2
+    OnClick = btn_ddtjClick
   end
   object ImageList1: TImageList
     Height = 20

@@ -763,6 +763,9 @@ object Fra_FHFK: TFra_FHFK
       Top = 48
       Width = 145
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 72
       EditLabel.Height = 12
       EditLabel.Caption = #21457#36135#21453#39304#26631#24535
@@ -786,6 +789,9 @@ object Fra_FHFK: TFra_FHFK
       Top = 16
       Width = 145
       Height = 20
+      ReadOnly_X = False
+      DataByValue = False
+      AllowEmpty_X = True
       EditLabel.Width = 48
       EditLabel.Height = 12
       EditLabel.Caption = #25509#25910#26631#24535

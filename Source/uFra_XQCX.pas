@@ -585,7 +585,7 @@ begin
       ADO_Custom := DM_DataBase.OpenQuery(sSqlData,[sCustomID]);
       if sSellID <> '' then
       begin
-        sSellID := Copy(sCustomID,2,Length(sCustomID));
+        sSellID := Copy(sSellID,2,Length(sSellID));
       end else
         sSellID := '-1';
       sSqlData := 'Select * from DO_CartonLableInfo where F_tiOrderType = 1 and F_iOrderID in (%s)';

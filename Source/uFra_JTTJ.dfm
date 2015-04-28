@@ -353,18 +353,7 @@ object Fra_JTTJ: TFra_JTTJ
   end
   object rmdb_JTTJ: TRMDBDataSet
     Visible = True
-    DataSet = ADO_JTTJ
     Left = 648
     Top = 80
-  end
-  object ADO_JTTJ: TADOQuery
-    Connection = DM_DataBase.Con_YDPrint
-    CursorType = ctStatic
-    LockType = ltBatchOptimistic
-    Parameters = <>
-    SQL.Strings = (
-      'Exec p_jttj '#39'2012.01.01'#39','#39'2013.05.01'#39)
-    Left = 648
-    Top = 112
   end
 end
